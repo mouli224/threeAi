@@ -12,19 +12,12 @@
       "dest": "/src/index.html"
     },
     {
-      "src": "/(.*)",
+      "src": "/src/(.*)",
       "dest": "/src/$1"
-    }
-  ],
-  "headers": [
+    },
     {
-      "source": "/src/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
+      "src": "/(.*\\.(css|js|html|json|ico|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot))",
+      "dest": "/src/$1"
     }
   ]
 }

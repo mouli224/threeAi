@@ -17,9 +17,8 @@ git commit -m "🚀 Initial commit: ThreeAI 3D Creator - Modern web app for crea
 
 echo.
 echo [4/6] Adding your GitHub repository as remote...
-echo Please enter your GitHub repository URL (e.g., https://github.com/username/repo-name.git):
-set /p repo_url="Repository URL: "
-git remote add origin %repo_url%
+echo Using repository: https://github.com/mouli224/threeAi.git
+git remote add origin https://github.com/mouli224/threeAi.git
 
 echo.
 echo [5/6] Pushing to GitHub...
