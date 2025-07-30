@@ -1,0 +1,37 @@
+{
+  "name": "threeai-3d-creator",
+  "version": "1.0.0",
+  "description": "A modern web application for creating 3D geometry from natural language descriptions",
+  "main": "src/index.html",
+  "scripts": {
+    "dev": "python -m http.server 8080 --directory src",
+    "build": "echo 'No build step required for static site'",
+    "start": "python -m http.server 8080 --directory src",
+    "deploy": "vercel --prod"
+  },
+  "keywords": [
+    "three.js",
+    "3d",
+    "geometry",
+    "ai",
+    "natural-language",
+    "webgl",
+    "graphics",
+    "visualization"
+  ],
+  "author": "ThreeAI Team",
+  "license": "MIT",
+  "homepage": "https://github.com/yourusername/threeai-3d-creator",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/threeai-3d-creator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/threeai-3d-creator/issues"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

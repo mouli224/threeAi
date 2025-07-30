@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Creator - Generate Geometry from Text</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Modern Navbar -->
+        <nav class="navbar">
+            <div class="navbar-container">
+                <!-- Logo and Brand -->
+                <div class="navbar-brand">
+                    <div class="logo">
+                        <svg width="32" height="32" viewBox="0 0 100 100" fill="none">
+                            <defs>
+                                <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <!-- 3D Cube Icon -->
+                            <path d="M50 10 L80 30 L80 70 L50 90 L20 70 L20 30 Z" fill="url(#logoGradient)" opacity="0.8"/>
+                            <path d="M50 10 L80 30 L50 50 L20 30 Z" fill="url(#logoGradient)"/>
+                            <path d="M50 50 L50 90 L20 70 L20 30 Z" fill="url(#logoGradient)" opacity="0.6"/>
+                            <path d="M50 50 L50 90 L80 70 L80 30 Z" fill="url(#logoGradient)" opacity="0.9"/>
+                        </svg>
+                    </div>
+                    <span class="brand-name">ThreeAI</span>
+                    <span class="brand-tagline">3D Creator</span>
+                </div>
+
+                <!-- Navigation Links -->
+                <div class="navbar-nav">
+                    <a href="#" class="nav-link active" data-section="home">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                        </svg>
+                        <span>Home</span>
+                    </a>
+                    <a href="#" class="nav-link" data-section="history">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
+                        </svg>
+                        <span>History</span>
+                    </a>
+                    <a href="#" class="nav-link" data-section="gallery">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M22 16V4c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2zm-11.5-6L8 13h12l-3.5-4.5-2.5 3.01L10.5 10z"/>
+                            <path d="M2 6v14c0 1.1.9 2 2 2h14v-2H4V6H2z"/>
+                        </svg>
+                        <span>Gallery</span>
+                    </a>
+                    <a href="#" class="nav-link" data-section="contact">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                        </svg>
+                        <span>Contact</span>
+                    </a>
+                </div>
+
+                <!-- Mobile Menu Toggle -->
+                <button class="mobile-menu-toggle" id="mobile-menu-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1 class="app-title">
+                    <span class="title-icon">✨</span>
+                    3D Creator
+                </h1>
+                <p class="app-subtitle">Transform your words into stunning 3D geometry</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Input Section -->
+            <section class="input-section">
+                <div class="input-container">
+                    <div class="input-wrapper">
+                        <textarea 
+                            id="prompt-input" 
+                            placeholder="Describe your 3D scene... (e.g., 'a red cube and blue sphere on a white plane')"
+                            rows="3"
+                        ></textarea>
+                        <button id="generate-button" class="generate-btn">
+                            <span class="btn-icon">🚀</span>
+                            Generate Scene
+                        </button>
+                    </div>
+                    <div class="input-hints">
+                        <span class="hint">Try: "a golden pyramid next to a green cylinder"</span>
+                        <span class="hint">or "three colorful spheres floating above a plane"</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3D Viewer -->
+            <section class="viewer-section">
+                <div class="viewer-container">
+                    <div class="viewer-header">
+                        <h3>3D Scene</h3>
+                        <div class="viewer-controls">
+                            <button class="control-btn" id="reset-camera" title="Reset Camera">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+                                </svg>
+                            </button>
+                            <button class="control-btn" id="fullscreen" title="Fullscreen">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="canvas-wrapper">
+                        <canvas id="3d-canvas"></canvas>
+                        <div class="loading-overlay" id="loading-overlay">
+                            <div class="loading-spinner"></div>
+                            <p>Creating your 3D scene...</p>
+                        </div>
+                        <div class="empty-state" id="empty-state">
+                            <div class="empty-icon">🎨</div>
+                            <h3>Ready to Create</h3>
+                            <p>Enter a description above to generate your first 3D scene</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- History Sidebar -->
+        <aside class="history-panel" id="history-panel">
+            <div class="panel-header">
+                <h3>Recent Creations</h3>
+                <button class="panel-toggle" id="history-toggle">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="history-content">
+                <div class="history-empty" id="history-empty">
+                    <div class="empty-icon">📜</div>
+                    <p>Your creations will appear here</p>
+                </div>
+                <ul id="history-list" class="history-list"></ul>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/controls/OrbitControls.js"></script>
+    <script>
+        // Simple check for THREE.js
+        console.log('THREE.js loaded:', typeof THREE !== 'undefined');
+        if (typeof THREE !== 'undefined') {
+            console.log('THREE.js version:', THREE.REVISION);
+        }
+    </script>
+    <script src="js/main.js"></script>
+</body>
+</html>
