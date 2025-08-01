@@ -11,9 +11,6 @@ const SUPABASE_CONFIG = {
 
 // Hugging Face Configuration
 const HUGGINGFACE_CONFIG = {
-    // Your actual Hugging Face token for the owner's free generations
-    ownerToken: 'YOUR_HUGGINGFACE_TOKEN',
-    
     // API endpoints for different models
     endpoints: {
         shapeE: 'https://api-inference.huggingface.co/models/openai/shap-e',
@@ -25,14 +22,19 @@ const HUGGINGFACE_CONFIG = {
     limits: {
         // Anonymous users (not logged in)
         anonymous: {
-            procedural: 3  // 3 procedural generations, HF requires login
+            procedural: 5  // 5 procedural generations, AI requires user token
         },
         // Registered users (logged in)  
         registered: {
-            ownerHf: 3,         // 3 HF generations using owner's token
-            procedural: 999     // Unlimited procedural (high number)
-        },
-        dailyLimit: 50 // Total daily limit for owner's token
+            procedural: 999,    // Unlimited procedural generations
+            aiWithToken: 999    // Unlimited AI generations if user provides token
+        }
+    },
+    
+    // Token management
+    tokenStorage: {
+        key: 'user_hf_token',      // LocalStorage key for user's token
+        encrypted: false            // Set to true if implementing encryption
     }
 };
 

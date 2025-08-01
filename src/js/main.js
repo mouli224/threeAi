@@ -80,6 +80,12 @@ class ThreeJSApp {
         console.log('🔍 Starting initializeAuth...');
         console.log('🔍 SupabaseAuth available:', typeof SupabaseAuth !== 'undefined');
         
+        // Initialize token manager first
+        if (typeof hfTokenManager !== 'undefined') {
+            hfTokenManager.updateTokenStatus();
+            console.log('✅ HF Token Manager initialized');
+        }
+        
         // Initialize Supabase authentication
         if (typeof SupabaseAuth !== 'undefined') {
             this.auth = new SupabaseAuth();
@@ -746,12 +752,14 @@ class ThreeJSApp {
 
         // Generate based on mode
         if (useHF) {
-            // Check if using user token
-            const userToken = sessionStorage.getItem('user_hf_token');
+            // Check if user has their own HF token
+            const userToken = hfTokenManager.getToken();
             if (userToken) {
                 await this.generateWithUserToken(prompt, userToken);
             } else {
-                await this.generateWithOwnerToken(prompt);
+                // No user token - show token dialog
+                this.showTokenRequiredDialog();
+                return;
             }
         } else {
             await this.generateProcedural(prompt);
@@ -761,26 +769,44 @@ class ThreeJSApp {
         this.incrementUsage(useHF);
     }
 
-    async generateWithOwnerToken(prompt) {
-        this.showLoading(true);
-        this.generateButton.disabled = true;
-
-        try {
-            // Use the AI generator with owner token
-            if (this.aiGenerator && this.aiGenerator.generateGeometry) {
-                await this.aiGenerator.generateGeometry(prompt);
-                this.showNotification('AI generation completed!', 'success');
-            } else {
-                throw new Error('AI generator not available');
-            }
-        } catch (error) {
-            console.error('AI generation failed:', error);
-            this.showNotification('AI generation failed, falling back to procedural', 'warning');
-            await this.generateProcedural(prompt);
-        } finally {
-            this.showLoading(false);
-            this.generateButton.disabled = false;
-        }
+    /**
+     * Show dialog when user tries to use AI without token
+     */
+    showTokenRequiredDialog() {
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>🤖 AI Generation Requires Your Token</h3>
+                    <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>To use AI generation, you need your own HuggingFace token.</strong></p>
+                    
+                    <div class="benefits">
+                        <p><strong>✨ Benefits of adding your token:</strong></p>
+                        <ul>
+                            <li>🚀 Unlimited AI generations</li>
+                            <li>🎯 Access to latest AI models</li>
+                            <li>🔒 Your token stays secure on your device</li>
+                            <li>⚡ Faster processing with your quota</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="fallback">
+                        <p><strong>💡 Don't have a token?</strong></p>
+                        <p>You can still use <strong>procedural generation</strong> which creates 3D objects using algorithms.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button onclick="this.closest('.modal').remove(); app.hfToggle.checked = false;" class="btn btn-secondary">Use Procedural</button>
+                    <button onclick="this.closest('.modal').remove(); hfTokenManager.showTokenDialog();" class="btn btn-primary">Add HF Token</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
     }
 
     async generateWithUserToken(prompt, userToken) {
@@ -1422,23 +1448,13 @@ class ThreeJSApp {
     
     handleHFToggle() {
         if (this.hfToggle.checked) {
-            // User wants to use HF - check if logged in
-            if (!this.currentUser) {
-                // Not logged in - show login prompt
+            // User wants to use AI - check if they have a token
+            if (!hfTokenManager.hasToken) {
+                // No token - show token dialog
                 this.hfToggle.checked = false;
-                this.showNotification('Please login to use AI features', 'warning');
-                this.showLoginModal();
+                this.showTokenRequiredDialog();
             } else {
-                // Logged in - check HF credits
-                const usage = this.getUsageData();
-                const limits = window.HUGGINGFACE_CONFIG.limits.registered;
-                if (usage.hf >= limits.ownerHf) {
-                    // Out of owner credits - prompt for user token
-                    this.hfToggle.checked = false;
-                    this.showHFTokenPrompt();
-                } else {
-                    this.showNotification('AI mode enabled', 'success');
-                }
+                this.showNotification('AI mode enabled with your token', 'success');
             }
         } else {
             this.showNotification('Procedural mode enabled', 'info');
@@ -1557,8 +1573,9 @@ class ThreeJSApp {
         }
         
         if (this.hfCount) {
-            const hfLimit = this.currentUser ? limits.ownerHf : 0;
-            this.hfCount.textContent = `${usage.hf}/${hfLimit}`;
+            // AI generations with user token are unlimited
+            const hasToken = hfTokenManager.hasToken;
+            this.hfCount.textContent = hasToken ? `${usage.hf}/∞` : 'Token Required';
         }
     }
     
@@ -1573,9 +1590,14 @@ class ThreeJSApp {
         const limits = this.currentUser ? window.HUGGINGFACE_CONFIG.limits.registered : window.HUGGINGFACE_CONFIG.limits.anonymous;
         
         if (useHF) {
-            if (!this.currentUser) return false;
-            return usage.hf < limits.ownerHf;
+            // AI generation requires user's own token
+            if (!hfTokenManager.hasToken) {
+                return false; // No user token available
+            }
+            // With user token, they have unlimited generations
+            return true;
         } else {
+            // Procedural generation limits
             if (this.currentUser) return true; // Unlimited procedural for logged in
             return usage.procedural < limits.procedural;
         }
@@ -1592,35 +1614,6 @@ class ThreeJSApp {
         
         this.saveUsageData(usage);
         this.updateUsageDisplay();
-    }
-    
-    showHFTokenPrompt() {
-        const modal = this.createModal('Use Your HuggingFace Token', `
-            <div class="hf-token-prompt">
-                <p>You've used all available AI credits. To continue using AI features, you can use your own HuggingFace token.</p>
-                <div class="input-group">
-                    <label for="user-hf-token">Your HuggingFace Token:</label>
-                    <input type="password" id="user-hf-token" placeholder="hf_...">
-                </div>
-                <div class="modal-actions">
-                    <button class="btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
-                    <button class="btn-primary" onclick="window.app.setUserHFToken(document.getElementById('user-hf-token').value)">Use Token</button>
-                </div>
-            </div>
-        `);
-        document.body.appendChild(modal);
-    }
-    
-    setUserHFToken(token) {
-        if (token && token.startsWith('hf_')) {
-            // Store user token (securely in a real app)
-            sessionStorage.setItem('user_hf_token', token);
-            this.hfToggle.checked = true;
-            this.showNotification('Your HuggingFace token is now active', 'success');
-            document.querySelector('.modal').remove();
-        } else {
-            this.showNotification('Please enter a valid HuggingFace token', 'error');
-        }
     }
     
     async initializeAuth() {

@@ -143,12 +143,18 @@
                     <div class="usage-stats" id="usage-stats">
                         <div class="usage-item">
                             <span class="usage-label">Procedural:</span>
-                            <span class="usage-count" id="procedural-count">0/3</span>
+                            <span class="usage-count" id="procedural-count">0/5</span>
                         </div>
                         <div class="usage-item">
                             <span class="usage-label">AI (HuggingFace):</span>
-                            <span class="usage-count" id="hf-count">0/0</span>
+                            <span class="usage-count" id="hf-count">Token Required</span>
                         </div>
+                    </div>
+                    
+                    <!-- Token Status -->
+                    <div class="token-status" id="token-status">
+                        <span class="token-inactive">🔒 No HF Token</span>
+                        <button onclick="hfTokenManager.showTokenDialog()" class="btn-add-token">Add Token</button>
                     </div>
                     
                     <div class="input-wrapper">
@@ -248,6 +254,9 @@
     
     <!-- Configuration -->
     <script src="js/config.js"></script>
+    
+    <!-- Token Management -->
+    <script src="js/hf-token-manager.js"></script>
     
     <!-- AI Integration Scripts -->
     <script src="js/ai-config.js"></script>
