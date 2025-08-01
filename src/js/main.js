@@ -195,12 +195,31 @@ class ThreeJSApp {
         }
     }
 
+    updateSmartAuthButton() {
+        // Check if user has previously logged in (preference stored)
+        const hasAccount = localStorage.getItem('threeai_has_account') === 'true';
+        const authButtons = document.getElementById('auth-buttons');
+        
+        if (hasAccount) {
+            // User has an account, show login button
+            authButtons.innerHTML = '<button id="login-btn" class="auth-btn primary">Login</button>';
+        } else {
+            // New user or no preference, show signup button
+            authButtons.innerHTML = '<button id="signup-btn" class="auth-btn primary">Sign Up</button>';
+        }
+        
+        // Re-attach event listeners since we replaced the HTML
+        this.setupAuthEventListeners();
+    }
+
     switchToLogin() {
-        this.updateAuthButtonState('login');
+        localStorage.setItem('threeai_has_account', 'true');
+        this.updateSmartAuthButton();
     }
 
     switchToSignup() {
-        this.updateAuthButtonState('signup');
+        localStorage.setItem('threeai_has_account', 'false');
+        this.updateSmartAuthButton();
     }
 
     updateAuthUI() {
@@ -1538,9 +1557,12 @@ class ThreeJSApp {
                 userName.textContent = displayName;
             }
         } else {
-            // Show auth buttons, hide user profile
+            // Show smart auth button, hide user profile
             this.authButtons.style.display = 'flex';
             this.userProfile.style.display = 'none';
+            
+            // Show smart auth button based on user preference
+            this.updateSmartAuthButton();
         }
     }
     

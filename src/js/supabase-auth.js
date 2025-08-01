@@ -527,6 +527,9 @@ class SupabaseAuth {
 
             if (error) throw error;
 
+            // Mark that user has an account for smart auth button
+            localStorage.setItem('threeai_has_account', 'true');
+            
             modal.remove();
             this.showNotification('✅ Successfully logged in!', 'success');
         } catch (error) {
