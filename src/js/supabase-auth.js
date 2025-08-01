@@ -156,15 +156,15 @@ class SupabaseAuth {
     /**
      * Show authentication modal
      */
-    showAuthModal() {
-        const modal = this.createAuthModal();
+    showAuthModal(type = 'signup') {
+        const modal = this.createAuthModal(type);
         document.body.appendChild(modal);
     }
 
     /**
      * Create authentication modal
      */
-    createAuthModal() {
+    createAuthModal(type = 'signup') {
         const modal = document.createElement('div');
         modal.className = 'auth-modal';
         modal.innerHTML = `
@@ -176,11 +176,11 @@ class SupabaseAuth {
                     </div>
                     <div class="modal-body">
                         <div class="auth-tabs">
-                            <button class="tab-btn active" data-tab="login">Login</button>
-                            <button class="tab-btn" data-tab="signup">Sign Up</button>
+                            <button class="tab-btn ${type === 'login' ? 'active' : ''}" data-tab="login">Login</button>
+                            <button class="tab-btn ${type === 'signup' ? 'active' : ''}" data-tab="signup">Sign Up</button>
                         </div>
                         
-                        <div class="tab-content active" id="login-tab">
+                        <div class="tab-content ${type === 'login' ? 'active' : ''}" id="login-tab">
                             <h3>Welcome Back!</h3>
                             <form id="login-form">
                                 <input type="email" id="login-email" placeholder="Email" required>
@@ -190,9 +190,13 @@ class SupabaseAuth {
                             <p class="auth-info">
                                 ✨ Get 3 free AI generations with your account!
                             </p>
+                            <div class="auth-switch">
+                                <span>Don't have an account? </span>
+                                <button type="button" class="switch-to-signup">Sign up here</button>
+                            </div>
                         </div>
                         
-                        <div class="tab-content" id="signup-tab">
+                        <div class="tab-content ${type === 'signup' ? 'active' : ''}" id="signup-tab">
                             <h3>Create Your Account</h3>
                             <form id="signup-form">
                                 <input type="text" id="signup-name" placeholder="Full Name" required>
@@ -205,6 +209,10 @@ class SupabaseAuth {
                                 🎁 New users get 3 free AI generations!<br>
                                 💡 After that, add your own Hugging Face token for unlimited use.
                             </p>
+                            <div class="auth-switch">
+                                <span>Already have an account? </span>
+                                <button type="button" class="switch-to-login">Login here</button>
+                            </div>
                         </div>
 
                         <div class="usage-tiers">
@@ -366,6 +374,27 @@ class SupabaseAuth {
                 border-radius: 8px;
             }
 
+            .auth-modal .auth-switch {
+                text-align: center;
+                margin-top: 16px;
+                color: #6b7280;
+                font-size: 14px;
+            }
+
+            .auth-modal .auth-switch button {
+                background: none;
+                border: none;
+                color: #6366f1;
+                cursor: pointer;
+                text-decoration: underline;
+                font-size: 14px;
+                padding: 0;
+            }
+
+            .auth-modal .auth-switch button:hover {
+                color: #4f46e5;
+            }
+
             .auth-modal .usage-tiers {
                 margin-top: 24px;
                 padding-top: 24px;
@@ -424,6 +453,31 @@ class SupabaseAuth {
                 modal.querySelector(`#${tab}-tab`).classList.add('active');
             };
         });
+
+        // Switch buttons
+        const switchToSignup = modal.querySelector('.switch-to-signup');
+        const switchToLogin = modal.querySelector('.switch-to-login');
+        
+        if (switchToSignup) {
+            switchToSignup.onclick = () => {
+                modal.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                modal.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                modal.querySelector('[data-tab="signup"]').classList.add('active');
+                modal.querySelector('#signup-tab').classList.add('active');
+                // Update main auth button to login
+                if (window.app) window.app.switchToLogin();
+            };
+        }
+        
+        if (switchToLogin) {
+            switchToLogin.onclick = () => {
+                modal.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                modal.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                modal.querySelector('[data-tab="login"]').classList.add('active');
+                modal.querySelector('#login-tab').classList.add('active');
+                // Keep main auth button as signup for easier access
+            };
+        }
 
         // Login form
         modal.querySelector('#login-form').onsubmit = async (e) => {

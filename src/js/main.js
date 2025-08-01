@@ -152,8 +152,7 @@ class ThreeJSApp {
                     <button id="logout-btn" class="auth-btn secondary">Logout</button>
                 </div>
                 <div id="auth-buttons" class="auth-buttons">
-                    <button id="login-btn" class="auth-btn primary">Login</button>
-                    <button id="signup-btn" class="auth-btn secondary">Sign Up</button>
+                    <button id="signup-btn" class="auth-btn primary">Sign Up</button>
                 </div>
                 <div id="usage-display" class="usage-display">
                     <span id="usage-status"></span>
@@ -163,13 +162,7 @@ class ThreeJSApp {
             header.appendChild(authContainer);
             
             // Add event listeners
-            document.getElementById('login-btn').addEventListener('click', () => {
-                this.auth.showAuthModal('login');
-            });
-            
-            document.getElementById('signup-btn').addEventListener('click', () => {
-                this.auth.showAuthModal('signup');
-            });
+            this.setupAuthEventListeners();
             
             document.getElementById('logout-btn').addEventListener('click', () => {
                 this.auth.logout();
@@ -177,6 +170,37 @@ class ThreeJSApp {
             
             this.updateAuthUI();
         }
+    }
+
+    setupAuthEventListeners() {
+        const authButtons = document.getElementById('auth-buttons');
+        
+        // Dynamic auth button handler
+        authButtons.addEventListener('click', (e) => {
+            if (e.target.id === 'signup-btn') {
+                this.auth.showAuthModal('signup');
+            } else if (e.target.id === 'login-btn') {
+                this.auth.showAuthModal('login');
+            }
+        });
+    }
+
+    updateAuthButtonState(mode = 'signup') {
+        const authButtons = document.getElementById('auth-buttons');
+        
+        if (mode === 'signup') {
+            authButtons.innerHTML = '<button id="signup-btn" class="auth-btn primary">Sign Up</button>';
+        } else {
+            authButtons.innerHTML = '<button id="login-btn" class="auth-btn primary">Login</button>';
+        }
+    }
+
+    switchToLogin() {
+        this.updateAuthButtonState('login');
+    }
+
+    switchToSignup() {
+        this.updateAuthButtonState('signup');
     }
 
     updateAuthUI() {
