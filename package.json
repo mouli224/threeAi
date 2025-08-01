@@ -1,6 +1,6 @@
 {
   "name": "threeai-3d-creator",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "A modern web application for creating 3D geometry from natural language descriptions",
   "main": "src/index.html",
   "scripts": {

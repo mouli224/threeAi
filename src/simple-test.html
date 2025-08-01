@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple AI Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .container { background: #f5f5f5; padding: 20px; border-radius: 10px; margin: 20px 0; }
+        input, button { padding: 10px; margin: 5px; border: 1px solid #ddd; border-radius: 5px; }
+        button { background: #007cba; color: white; cursor: pointer; border: none; }
+        button:hover { background: #005fa3; }
+        .result { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; font-family: monospace; white-space: pre-wrap; }
+        .error { background: #fee; border: 1px solid #fcc; }
+        .success { background: #efe; border: 1px solid #cfc; }
+        #canvas { border: 1px solid #ddd; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Simple AI Test - No Auth Required</h1>
+    
+    <div class="container">
+        <h3>Direct AI Generation Test</h3>
+        <input type="text" id="prompt" placeholder="Enter prompt (e.g., 'red cube')" value="red cube" style="width: 300px;">
+        <button onclick="testGeneration()">Generate</button>
+        <div id="result" class="result">Enter a prompt and click Generate to test AI...</div>
+    </div>
+    
+    <div class="container">
+        <h3>3D Viewer</h3>
+        <canvas id="canvas" width="600" height="400"></canvas>
+    </div>
+
+    <!-- Load only essential scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/huggingface-service.js"></script>
+    
+    <script>
+        let scene, camera, renderer, controls;
+        
+        // Initialize 3D scene
+        function init3D() {
+            const canvas = document.getElementById('canvas');
+            
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+            
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, canvas.width / canvas.height, 0.1, 1000);
+            camera.position.set(5, 5, 5);
+            
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(canvas.width, canvas.height);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            
+            // Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(-1, 1, 1);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+            
+            // Add a default cube
+            const geometry = new THREE.BoxGeometry(1, 1, 1);
+            const material = new THREE.MeshLambertMaterial({ color: 0xff6b6b });
+            const cube = new THREE.Mesh(geometry, material);
+            cube.castShadow = true;
+            scene.add(cube);
+            
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+            }
+            animate();
+            
+            console.log('✅ 3D scene initialized');
+        }
+        
+        async function testGeneration() {
+            const prompt = document.getElementById('prompt').value;
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.textContent = `Testing generation for: "${prompt}"\n\nInitializing...`;
+            resultDiv.className = 'result';
+            
+            try {
+                // Test 1: Check config
+                if (typeof HUGGINGFACE_CONFIG === 'undefined') {
+                    throw new Error('HUGGINGFACE_CONFIG not loaded');
+                }
+                
+                resultDiv.textContent += '\n✅ Config loaded';
+                
+                // Test 2: Check token
+                const token = HUGGINGFACE_CONFIG.ownerToken;
+                if (!token || !token.startsWith('hf_')) {
+                    throw new Error('Invalid Hugging Face token');
+                }
+                
+                resultDiv.textContent += '\n✅ Token available';
+                
+                // Test 3: Test token validity
+                resultDiv.textContent += '\n🔍 Checking token validity...';
+                const whoamiResponse = await fetch('https://huggingface.co/api/whoami', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!whoamiResponse.ok) {
+                    throw new Error(`Token invalid (${whoamiResponse.status})`);
+                }
+                
+                resultDiv.textContent += '\n✅ Token valid';
+                
+                // Test 4: Try AI generation
+                resultDiv.textContent += '\n🤖 Starting AI generation...';
+                
+                if (typeof HuggingFaceService === 'undefined') {
+                    throw new Error('HuggingFaceService not available');
+                }
+                
+                const service = new HuggingFaceService(token);
+                resultDiv.textContent += '\n✅ Service created';
+                
+                // Try generation with timeout
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Generation timeout (30s)')), 30000)
+                );
+                
+                const generationPromise = service.generate3DModel(prompt, { 
+                    maxRetries: 1,
+                    timeout: 25000 
+                });
+                
+                resultDiv.textContent += '\n⏳ Generating... (this may take 10-30 seconds)';
+                
+                const result = await Promise.race([generationPromise, timeoutPromise]);
+                
+                if (result && result.vertices) {
+                    resultDiv.textContent += `\n✅ SUCCESS! Generated model with:`;
+                    resultDiv.textContent += `\n  - Vertices: ${result.vertices.length / 3}`;
+                    resultDiv.textContent += `\n  - Faces: ${result.faces ? result.faces.length / 3 : 'N/A'}`;
+                    resultDiv.textContent += `\n  - Colors: ${result.colors ? 'Yes' : 'No'}`;
+                    resultDiv.className = 'result success';
+                    
+                    // Try to render the model
+                    renderModel(result);
+                } else {
+                    resultDiv.textContent += '\n⚠️ Generation completed but no valid model data received';
+                    resultDiv.className = 'result error';
+                }
+                
+            } catch (error) {
+                resultDiv.textContent += `\n\n❌ ERROR: ${error.message}`;
+                
+                if (error.message.includes('CORS') || error.message.includes('NetworkError')) {
+                    resultDiv.textContent += '\n\n💡 This is likely a CORS issue.';
+                    resultDiv.textContent += '\n   For production, this would work with proper CORS proxy.';
+                }
+                
+                resultDiv.className = 'result error';
+                console.error('Generation failed:', error);
+            }
+        }
+        
+        function renderModel(modelData) {
+            try {
+                // Clear existing objects (except lights)
+                const objectsToRemove = [];
+                scene.traverse((child) => {
+                    if (child.isMesh) {
+                        objectsToRemove.push(child);
+                    }
+                });
+                objectsToRemove.forEach(obj => scene.remove(obj));
+                
+                // Create geometry from model data
+                const geometry = new THREE.BufferGeometry();
+                geometry.setAttribute('position', new THREE.Float32Array(modelData.vertices), 3);
+                
+                if (modelData.faces) {
+                    geometry.setIndex(modelData.faces);
+                }
+                
+                if (modelData.colors) {
+                    geometry.setAttribute('color', new THREE.Float32Array(modelData.colors), 3);
+                }
+                
+                geometry.computeVertexNormals();
+                
+                // Create material
+                const material = new THREE.MeshLambertMaterial({ 
+                    color: 0x44aa88,
+                    vertexColors: modelData.colors ? true : false
+                });
+                
+                // Create mesh
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.castShadow = true;
+                scene.add(mesh);
+                
+                console.log('✅ Model rendered in 3D scene');
+            } catch (error) {
+                console.error('Failed to render model:', error);
+            }
+        }
+        
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            init3D();
+        });
+    </script>
+</body>
+</html>

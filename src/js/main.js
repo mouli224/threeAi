@@ -13,12 +13,25 @@ class ThreeJSApp {
         this.objects = [];
         this.history = [];
         
+        // AI Integration
+        this.aiGenerator = null;
+        this.aiEnabled = false;
+        
+        // Authentication & Usage
+        this.authManager = null;
+        this.usageManager = null;
+        this.currentUser = null;
+        
         // DOM elements
         this.promptInput = null;
         this.generateButton = null;
         this.historyList = null;
         this.loadingOverlay = null;
         this.emptyState = null;
+        this.hfToggle = null;
+        this.authButtons = null;
+        this.userProfile = null;
+        this.usageStats = null;
         
         this.init();
     }
@@ -30,6 +43,12 @@ class ThreeJSApp {
         this.setupHints();
         this.loadHistory();
         
+        // Initialize AI Generator first
+        this.initAI();
+        
+        // Initialize authentication system after AI
+        this.initializeAuth();
+        
         // Start render loop
         this.render();
         
@@ -40,6 +59,231 @@ class ThreeJSApp {
         }, 100);
     }
 
+    initAI() {
+        // Check if AI integration is available
+        if (typeof AIModelGenerator !== 'undefined') {
+            this.aiGenerator = new AIModelGenerator();
+            this.aiEnabled = true;
+            console.log('✅ AI Model Generator initialized');
+            
+            // Add AI toggle to UI
+            this.addAIToggle();
+            
+            // Show Hugging Face status
+            this.showAIStatus();
+        } else {
+            console.log('ℹ️ AI Model Generator not available - using procedural generation only');
+        }
+    }
+
+    initializeAuth() {
+        console.log('🔍 Starting initializeAuth...');
+        console.log('🔍 SupabaseAuth available:', typeof SupabaseAuth !== 'undefined');
+        
+        // Initialize Supabase authentication
+        if (typeof SupabaseAuth !== 'undefined') {
+            this.auth = new SupabaseAuth();
+            console.log('✅ Supabase Auth initialized');
+            
+            // Initialize usage manager
+            if (typeof UsageManager !== 'undefined') {
+                // Pass the HuggingFaceService from aiGenerator
+                const hfService = (this.aiGenerator && this.aiGenerator.huggingFaceService) 
+                    ? this.aiGenerator.huggingFaceService 
+                    : null;
+                    
+                console.log('🔍 Debug - aiGenerator:', !!this.aiGenerator);
+                console.log('🔍 Debug - hfService:', !!hfService);
+                if (hfService) {
+                    console.log('🔍 Debug - hfService.generate3DModel:', typeof hfService.generate3DModel);
+                }
+                    
+                this.usageManager = new UsageManager(this.auth, hfService);
+                console.log('✅ Usage Manager initialized with HF service:', !!hfService);
+                
+                // Update usage display
+                this.usageManager.updateUsageDisplay();
+                
+                // Add auth UI
+                this.addAuthUI();
+            }
+            
+            // Listen for auth state changes
+            this.auth.onAuthStateChange((user) => {
+                this.handleAuthStateChange(user);
+            });
+        } else {
+            console.log('ℹ️ Supabase Auth not available - running in limited mode');
+        }
+    }
+
+    handleAuthStateChange(user) {
+        if (user) {
+            console.log('✅ User logged in:', user.email);
+            this.showNotification(`👋 Welcome back, ${user.email}!`, 'success');
+        } else {
+            console.log('👋 User logged out');
+        }
+        
+        // Update usage display
+        if (this.usageManager) {
+            this.usageManager.updateUsageDisplay();
+        }
+        
+        // Update auth UI
+        this.updateAuthUI();
+    }
+
+    addAuthUI() {
+        // Add login/logout button to header
+        const header = document.querySelector('.app-header');
+        if (header) {
+            const authContainer = document.createElement('div');
+            authContainer.className = 'auth-container';
+            authContainer.innerHTML = `
+                <div id="user-info" class="user-info hidden">
+                    <span id="user-email"></span>
+                    <button id="logout-btn" class="auth-btn secondary">Logout</button>
+                </div>
+                <div id="auth-buttons" class="auth-buttons">
+                    <button id="login-btn" class="auth-btn primary">Login</button>
+                    <button id="signup-btn" class="auth-btn secondary">Sign Up</button>
+                </div>
+                <div id="usage-display" class="usage-display">
+                    <span id="usage-status"></span>
+                </div>
+            `;
+            
+            header.appendChild(authContainer);
+            
+            // Add event listeners
+            document.getElementById('login-btn').addEventListener('click', () => {
+                this.auth.showAuthModal('login');
+            });
+            
+            document.getElementById('signup-btn').addEventListener('click', () => {
+                this.auth.showAuthModal('signup');
+            });
+            
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                this.auth.logout();
+            });
+            
+            this.updateAuthUI();
+        }
+    }
+
+    updateAuthUI() {
+        const userInfo = document.getElementById('user-info');
+        const authButtons = document.getElementById('auth-buttons');
+        const userEmail = document.getElementById('user-email');
+        
+        if (this.auth && this.auth.isLoggedIn()) {
+            const user = this.auth.getCurrentUser();
+            if (user && userEmail) {
+                userEmail.textContent = user.email;
+                userInfo?.classList.remove('hidden');
+                authButtons?.classList.add('hidden');
+            }
+        } else {
+            userInfo?.classList.add('hidden');
+            authButtons?.classList.remove('hidden');
+        }
+    }
+
+    showAIStatus() {
+        // Check if token is available
+        const token = localStorage.getItem('hf_token');
+        
+        if (token) {
+            // Show success message with token
+            setTimeout(() => {
+                this.showNotification('🤗 Hugging Face AI enabled with your token!', 'success');
+            }, 1000);
+        } else {
+            // Show setup guide for better results
+            setTimeout(() => {
+                this.showNotification('🤗 Hugging Face AI enabled (limited). Click AI button for better results!', 'info');
+            }, 1000);
+            
+            // Show setup guide after a delay
+            setTimeout(() => {
+                if (typeof HuggingFaceTokenSetup !== 'undefined') {
+                    const tokenSetup = new HuggingFaceTokenSetup();
+                    tokenSetup.showTokenSetupGuide();
+                }
+            }, 3000);
+        }
+    }
+
+    addAIToggle() {
+        // Add AI toggle button to the UI
+        const controlsContainer = document.querySelector('.viewer-controls');
+        if (controlsContainer) {
+            const aiToggle = document.createElement('button');
+            aiToggle.className = 'control-btn ai-toggle';
+            aiToggle.id = 'ai-toggle';
+            aiToggle.title = 'Toggle AI Generation';
+            aiToggle.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2L2 7V10C2 16 6 20.5 12 22C18 20.5 22 16 22 10V7L12 2ZM12 4.1L20 8.2V10C20 15 17 18.7 12 20C7 18.7 4 15 4 10V8.2L12 4.1ZM9 12L7 10L5.5 11.5L9 15L18.5 5.5L17 4L9 12Z"/>
+                </svg>
+                <span class="ai-status">AI</span>
+            `;
+            
+            aiToggle.addEventListener('click', () => {
+                // Check if click is for setup guide
+                if (!this.aiEnabled || !localStorage.getItem('hf_token')) {
+                    if (typeof HuggingFaceTokenSetup !== 'undefined') {
+                        const tokenSetup = new HuggingFaceTokenSetup();
+                        tokenSetup.showTokenSetupGuide();
+                    } else {
+                        this.toggleAI();
+                    }
+                } else {
+                    this.toggleAI();
+                }
+            });
+            
+            controlsContainer.appendChild(aiToggle);
+            this.updateAIToggleStatus();
+        }
+    }
+
+    toggleAI() {
+        this.aiEnabled = !this.aiEnabled;
+        this.updateAIToggleStatus();
+        
+        const status = this.aiEnabled ? 'enabled' : 'disabled';
+        const message = this.aiEnabled ? 
+            '🤗 Hugging Face AI Generation enabled' : 
+            '⚙️ Procedural Generation enabled';
+        this.showNotification(message, 'info');
+    }
+
+    updateAIToggleStatus() {
+        const aiToggle = document.getElementById('ai-toggle');
+        const aiStatus = aiToggle?.querySelector('.ai-status');
+        
+        if (aiToggle && aiStatus) {
+            const hasToken = localStorage.getItem('hf_token');
+            
+            if (this.aiEnabled) {
+                aiToggle.classList.add('active');
+                aiStatus.textContent = hasToken ? '🤗 HF' : '🤗 Basic';
+                aiToggle.style.backgroundColor = hasToken ? '#10b981' : '#f59e0b';
+                aiToggle.title = hasToken ? 
+                    'Hugging Face AI Generation Enabled (With Token)' : 
+                    'Hugging Face AI Generation Enabled (Limited) - Click to setup token';
+            } else {
+                aiToggle.classList.remove('active');
+                aiStatus.textContent = 'AI';
+                aiToggle.style.backgroundColor = '#6b7280';
+                aiToggle.title = 'AI Generation Disabled';
+            }
+        }
+    }
+
     setupDOM() {
         this.canvas = document.getElementById('3d-canvas');
         this.promptInput = document.getElementById('prompt-input');
@@ -48,6 +292,23 @@ class ThreeJSApp {
         this.loadingOverlay = document.getElementById('loading-overlay');
         this.emptyState = document.getElementById('empty-state');
         this.historyEmpty = document.getElementById('history-empty');
+        
+        // New auth and usage elements
+        this.hfToggle = document.getElementById('hf-toggle');
+        this.authButtons = document.getElementById('auth-buttons');
+        this.userProfile = document.getElementById('user-profile');
+        this.usageStats = document.getElementById('usage-stats');
+        
+        // Auth buttons
+        this.loginBtn = document.getElementById('login-btn');
+        this.signupBtn = document.getElementById('signup-btn');
+        this.logoutLink = document.getElementById('logout-link');
+        this.userMenuBtn = document.getElementById('user-menu-btn');
+        this.userDropdown = document.getElementById('user-dropdown');
+        
+        // Usage display elements
+        this.proceduralCount = document.getElementById('procedural-count');
+        this.hfCount = document.getElementById('hf-count');
     }
 
     setupScene() {
@@ -198,6 +459,16 @@ class ThreeJSApp {
 
         // Navbar functionality
         this.setupNavbar();
+        
+        // Auth event listeners
+        this.setupAuthListeners();
+        
+        // HF Toggle
+        if (this.hfToggle) {
+            this.hfToggle.addEventListener('change', () => {
+                this.handleHFToggle();
+            });
+        }
     }
 
     setupNavbar() {
@@ -453,6 +724,156 @@ class ThreeJSApp {
             return;
         }
 
+        const useHF = this.hfToggle ? this.hfToggle.checked : false;
+
+        // Check if user can generate
+        if (!this.canGenerate(useHF)) {
+            if (useHF) {
+                this.showNotification('No AI credits remaining. Please login or use your own token.', 'warning');
+                if (!this.currentUser) {
+                    this.showLoginModal();
+                }
+            } else {
+                if (!this.currentUser) {
+                    this.showNotification('Generation limit reached. Please login for unlimited procedural generations.', 'warning');
+                    this.showLoginModal();
+                } else {
+                    this.showNotification('This should not happen - unlimited procedural for logged in users', 'error');
+                }
+            }
+            return;
+        }
+
+        // Generate based on mode
+        if (useHF) {
+            // Check if using user token
+            const userToken = sessionStorage.getItem('user_hf_token');
+            if (userToken) {
+                await this.generateWithUserToken(prompt, userToken);
+            } else {
+                await this.generateWithOwnerToken(prompt);
+            }
+        } else {
+            await this.generateProcedural(prompt);
+        }
+
+        // Increment usage after successful generation
+        this.incrementUsage(useHF);
+    }
+
+    async generateWithOwnerToken(prompt) {
+        this.showLoading(true);
+        this.generateButton.disabled = true;
+
+        try {
+            // Use the AI generator with owner token
+            if (this.aiGenerator && this.aiGenerator.generateGeometry) {
+                await this.aiGenerator.generateGeometry(prompt);
+                this.showNotification('AI generation completed!', 'success');
+            } else {
+                throw new Error('AI generator not available');
+            }
+        } catch (error) {
+            console.error('AI generation failed:', error);
+            this.showNotification('AI generation failed, falling back to procedural', 'warning');
+            await this.generateProcedural(prompt);
+        } finally {
+            this.showLoading(false);
+            this.generateButton.disabled = false;
+        }
+    }
+
+    async generateWithUserToken(prompt, userToken) {
+        this.showLoading(true);
+        this.generateButton.disabled = true;
+
+        try {
+            // Use user's token for generation
+            const originalToken = window.huggingFaceService?.token;
+            if (window.huggingFaceService) {
+                window.huggingFaceService.token = userToken;
+            }
+
+            if (this.aiGenerator && this.aiGenerator.generateGeometry) {
+                await this.aiGenerator.generateGeometry(prompt);
+                this.showNotification('AI generation completed with your token!', 'success');
+            } else {
+                throw new Error('AI generator not available');
+            }
+
+            // Restore original token
+            if (window.huggingFaceService && originalToken) {
+                window.huggingFaceService.token = originalToken;
+            }
+        } catch (error) {
+            console.error('User token generation failed:', error);
+            this.showNotification('AI generation failed, falling back to procedural', 'warning');
+            await this.generateProcedural(prompt);
+        } finally {
+            this.showLoading(false);
+            this.generateButton.disabled = false;
+        }
+    }
+
+    async generateProcedural(prompt) {
+        this.showLoading(true);
+        this.generateButton.disabled = true;
+
+        try {
+            // Use procedural generation
+            await this.generateGeometryDirect(prompt);
+            this.showNotification('Procedural generation completed!', 'success');
+        } catch (error) {
+            console.error('Procedural generation failed:', error);
+            this.showNotification('Generation failed', 'error');
+        } finally {
+            this.showLoading(false);
+            this.generateButton.disabled = false;
+        }
+    }
+
+    async generateWithUsageManager(prompt) {
+        this.showLoading(true);
+        this.generateButton.disabled = true;
+
+        try {
+            // Clear existing objects
+            this.clearScene();
+            this.emptyState.style.display = 'none';
+
+            this.showNotification('🤖 Generating with AI...', 'info');
+            
+            // Execute generation through usage manager
+            const aiModel = await this.usageManager.executeGeneration(prompt);
+            
+            if (aiModel) {
+                // Position the AI-generated model
+                aiModel.position.set(0, 1, 0);
+                aiModel.castShadow = true;
+                aiModel.receiveShadow = true;
+                
+                this.scene.add(aiModel);
+                this.objects.push(aiModel);
+                
+                // Focus camera on the new model
+                this.focusCameraOnScene();
+                this.showNotification('✨ AI model generated successfully!', 'success');
+            } else {
+                // Fallback to procedural generation
+                await this.parseAndCreateGeometryProcedural(prompt);
+            }
+
+            // Add to history
+            this.addToHistory(prompt);
+            this.renderer.render(this.scene, this.camera);
+
+        } finally {
+            this.showLoading(false);
+            this.generateButton.disabled = false;
+        }
+    }
+
+    async generateGeometryDirect(prompt) {
         this.showLoading(true);
         this.generateButton.disabled = true;
 
@@ -485,7 +906,38 @@ class ThreeJSApp {
     }
 
     async parseAndCreateGeometry(prompt) {
-        // Simple prompt parsing - in a real app, this would use NLP/AI
+        // Try AI generation first if enabled
+        if (this.aiEnabled && this.aiGenerator) {
+            try {
+                this.showNotification('🤖 Generating with AI...', 'info');
+                const aiModel = await this.tryAIGeneration(prompt);
+                
+                if (aiModel) {
+                    // Position the AI-generated model
+                    aiModel.position.set(0, 1, 0);
+                    aiModel.castShadow = true;
+                    aiModel.receiveShadow = true;
+                    
+                    this.scene.add(aiModel);
+                    this.objects.push(aiModel);
+                    
+                    // Focus camera on the new model
+                    this.focusCameraOnScene();
+                    this.showNotification('✨ AI model generated successfully!', 'success');
+                    return; // Exit early if AI generation succeeded
+                }
+            } catch (error) {
+                console.warn('AI generation failed, using fallback:', error);
+                this.showNotification('AI generation failed, using fallback...', 'warning');
+            }
+        }
+
+        // Fallback to procedural generation
+        await this.parseAndCreateGeometryProcedural(prompt);
+    }
+
+    async parseAndCreateGeometryProcedural(prompt) {
+        // Fallback to procedural generation (your existing code)
         const words = prompt.toLowerCase().split(' ');
         const shapes = this.extractShapes(words);
         const colors = this.extractColors(words);
@@ -517,6 +969,44 @@ class ThreeJSApp {
 
         // Simulate processing time for better UX
         await new Promise(resolve => setTimeout(resolve, 300));
+    }
+
+    async tryAIGeneration(prompt) {
+        // Check cache first
+        const cachedModel = this.aiGenerator.getCachedModel(prompt);
+        if (cachedModel) {
+            this.showNotification('📦 Using cached AI model', 'info');
+            return cachedModel;
+        }
+
+        // Try Hugging Face first (prioritized)
+        const strategies = [
+            () => this.aiGenerator.generateWithShapE(prompt),         // Primary: Hugging Face
+            () => this.aiGenerator.generateProceduralModel(prompt),   // Enhanced fallback
+            () => this.aiGenerator.generateWithLocalAI(prompt),       // Local AI if available
+        ];
+
+        for (const strategy of strategies) {
+            try {
+                const model = await Promise.race([
+                    strategy(),
+                    new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('Timeout')), 45000) // Increased timeout for HF
+                    )
+                ]);
+
+                if (model) {
+                    // Cache the successful generation
+                    this.aiGenerator.cacheModel(prompt, model);
+                    return model;
+                }
+            } catch (error) {
+                console.warn('AI strategy failed:', error);
+                continue;
+            }
+        }
+
+        return null; // All strategies failed
     }
 
     focusCameraOnScene() {
@@ -888,6 +1378,289 @@ class ThreeJSApp {
         });
 
         this.renderer.render(this.scene, this.camera);
+    }
+
+    // ===== AUTH AND USAGE MANAGEMENT =====
+    
+    setupAuthListeners() {
+        // Login button
+        if (this.loginBtn) {
+            this.loginBtn.addEventListener('click', () => {
+                this.showLoginModal();
+            });
+        }
+        
+        // Signup button  
+        if (this.signupBtn) {
+            this.signupBtn.addEventListener('click', () => {
+                this.showSignupModal();
+            });
+        }
+        
+        // Logout link
+        if (this.logoutLink) {
+            this.logoutLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.logout();
+            });
+        }
+        
+        // User menu toggle
+        if (this.userMenuBtn) {
+            this.userMenuBtn.addEventListener('click', () => {
+                this.toggleUserMenu();
+            });
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (this.userDropdown && !this.userProfile.contains(e.target)) {
+                this.userDropdown.classList.remove('show');
+            }
+        });
+    }
+    
+    handleHFToggle() {
+        if (this.hfToggle.checked) {
+            // User wants to use HF - check if logged in
+            if (!this.currentUser) {
+                // Not logged in - show login prompt
+                this.hfToggle.checked = false;
+                this.showNotification('Please login to use AI features', 'warning');
+                this.showLoginModal();
+            } else {
+                // Logged in - check HF credits
+                const usage = this.getUsageData();
+                const limits = window.HUGGINGFACE_CONFIG.limits.registered;
+                if (usage.hf >= limits.ownerHf) {
+                    // Out of owner credits - prompt for user token
+                    this.hfToggle.checked = false;
+                    this.showHFTokenPrompt();
+                } else {
+                    this.showNotification('AI mode enabled', 'success');
+                }
+            }
+        } else {
+            this.showNotification('Procedural mode enabled', 'info');
+        }
+    }
+    
+    showLoginModal() {
+        if (this.auth && this.auth.showAuthModal) {
+            this.auth.showAuthModal('login');
+        } else {
+            this.showNotification('Please wait for auth system to load...', 'warning');
+        }
+    }
+    
+    showSignupModal() {
+        if (this.auth && this.auth.showAuthModal) {
+            this.auth.showAuthModal('signup');
+        } else {
+            this.showNotification('Please wait for auth system to load...', 'warning');
+        }
+    }
+    
+    async logout() {
+        if (this.auth && this.auth.logout) {
+            await this.auth.logout();
+            this.currentUser = null;
+            this.updateAuthUI();
+            this.updateUsageDisplay();
+            this.showNotification('Logged out successfully', 'success');
+        } else {
+            this.showNotification('Auth system not available', 'error');
+        }
+    }
+    
+    toggleUserMenu() {
+        if (this.userDropdown) {
+            this.userDropdown.classList.toggle('show');
+        }
+    }
+    
+    async updateAuthUI() {
+        // Only update if elements exist
+        if (!this.authButtons || !this.userProfile) {
+            console.log('Auth UI elements not found, skipping update');
+            return;
+        }
+        
+        if (this.currentUser) {
+            // Show user profile, hide auth buttons
+            this.authButtons.style.display = 'none';
+            this.userProfile.style.display = 'flex';
+            
+            // Update user name - get from profile or metadata
+            const userName = document.getElementById('user-name');
+            if (userName) {
+                let displayName = this.currentUser.email?.split('@')[0] || 'User';
+                
+                // Try to get full name from user metadata or profile
+                if (this.currentUser.user_metadata?.full_name) {
+                    displayName = this.currentUser.user_metadata.full_name;
+                } else if (this.auth && this.auth.getUserProfile) {
+                    try {
+                        const profile = await this.auth.getUserProfile(this.currentUser.id);
+                        if (profile?.full_name) {
+                            displayName = profile.full_name;
+                        }
+                    } catch (error) {
+                        console.log('Could not fetch user profile for name');
+                    }
+                }
+                
+                userName.textContent = displayName;
+            }
+        } else {
+            // Show auth buttons, hide user profile
+            this.authButtons.style.display = 'flex';
+            this.userProfile.style.display = 'none';
+        }
+    }
+    
+    getUsageData() {
+        if (this.currentUser) {
+            // Get from server/supabase for logged in users
+            return this.usageManager ? this.usageManager.getCurrentUsage() : { procedural: 0, hf: 0 };
+        } else {
+            // Get from localStorage for anonymous users
+            const usage = localStorage.getItem('threeai_usage');
+            return usage ? JSON.parse(usage) : { procedural: 0, hf: 0 };
+        }
+    }
+    
+    saveUsageData(usage) {
+        if (this.currentUser) {
+            // Save to server/supabase for logged in users
+            if (this.usageManager) {
+                this.usageManager.updateUsage(usage);
+            }
+        } else {
+            // Save to localStorage for anonymous users
+            localStorage.setItem('threeai_usage', JSON.stringify(usage));
+        }
+    }
+    
+    updateUsageDisplay() {
+        // Check if config is available
+        if (!window.HUGGINGFACE_CONFIG || !window.HUGGINGFACE_CONFIG.limits) {
+            console.log('HUGGINGFACE_CONFIG not available, skipping usage display update');
+            return;
+        }
+        
+        const usage = this.getUsageData();
+        const limits = this.currentUser ? window.HUGGINGFACE_CONFIG.limits.registered : window.HUGGINGFACE_CONFIG.limits.anonymous;
+        
+        if (this.proceduralCount) {
+            this.proceduralCount.textContent = `${usage.procedural}/${this.currentUser ? '∞' : limits.procedural}`;
+        }
+        
+        if (this.hfCount) {
+            const hfLimit = this.currentUser ? limits.ownerHf : 0;
+            this.hfCount.textContent = `${usage.hf}/${hfLimit}`;
+        }
+    }
+    
+    canGenerate(useHF = false) {
+        // Check if config is available
+        if (!window.HUGGINGFACE_CONFIG || !window.HUGGINGFACE_CONFIG.limits) {
+            console.log('HUGGINGFACE_CONFIG not available, allowing generation');
+            return true; // Allow generation if config not available
+        }
+        
+        const usage = this.getUsageData();
+        const limits = this.currentUser ? window.HUGGINGFACE_CONFIG.limits.registered : window.HUGGINGFACE_CONFIG.limits.anonymous;
+        
+        if (useHF) {
+            if (!this.currentUser) return false;
+            return usage.hf < limits.ownerHf;
+        } else {
+            if (this.currentUser) return true; // Unlimited procedural for logged in
+            return usage.procedural < limits.procedural;
+        }
+    }
+    
+    incrementUsage(useHF = false) {
+        const usage = this.getUsageData();
+        
+        if (useHF) {
+            usage.hf += 1;
+        } else {
+            usage.procedural += 1;
+        }
+        
+        this.saveUsageData(usage);
+        this.updateUsageDisplay();
+    }
+    
+    showHFTokenPrompt() {
+        const modal = this.createModal('Use Your HuggingFace Token', `
+            <div class="hf-token-prompt">
+                <p>You've used all available AI credits. To continue using AI features, you can use your own HuggingFace token.</p>
+                <div class="input-group">
+                    <label for="user-hf-token">Your HuggingFace Token:</label>
+                    <input type="password" id="user-hf-token" placeholder="hf_...">
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                    <button class="btn-primary" onclick="window.app.setUserHFToken(document.getElementById('user-hf-token').value)">Use Token</button>
+                </div>
+            </div>
+        `);
+        document.body.appendChild(modal);
+    }
+    
+    setUserHFToken(token) {
+        if (token && token.startsWith('hf_')) {
+            // Store user token (securely in a real app)
+            sessionStorage.setItem('user_hf_token', token);
+            this.hfToggle.checked = true;
+            this.showNotification('Your HuggingFace token is now active', 'success');
+            document.querySelector('.modal').remove();
+        } else {
+            this.showNotification('Please enter a valid HuggingFace token', 'error');
+        }
+    }
+    
+    async initializeAuth() {
+        // Initialize Supabase authentication using the SupabaseAuth class
+        if (typeof SupabaseAuth !== 'undefined') {
+            this.auth = new SupabaseAuth();
+            console.log('✅ Supabase Auth initialized');
+            
+            // Listen for auth state changes
+            if (this.auth.onAuthStateChange) {
+                this.auth.onAuthStateChange((user) => {
+                    this.currentUser = user;
+                    this.updateAuthUI();
+                    this.updateUsageDisplay();
+                });
+            }
+            
+            // Check current auth state
+            this.currentUser = this.auth.getCurrentUser ? this.auth.getCurrentUser() : null;
+            
+            // Initialize usage manager if available
+            if (typeof UsageManager !== 'undefined') {
+                // Pass the HuggingFaceService from aiGenerator
+                const hfService = (this.aiGenerator && this.aiGenerator.huggingFaceService) 
+                    ? this.aiGenerator.huggingFaceService 
+                    : null;
+                    
+                this.usageManager = new UsageManager(this.auth, hfService);
+                console.log('✅ Usage Manager initialized with HF service:', !!hfService);
+            }
+        } else {
+            console.log('ℹ️ Supabase Auth class not available - running without authentication');
+        }
+        
+        // Update UI
+        this.updateAuthUI();
+        this.updateUsageDisplay();
+        
+        // Make app globally accessible for modal callbacks
+        window.app = this;
     }
 }
 

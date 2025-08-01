@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThreeAI - Full System Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .test-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 20px; 
+        }
+        .test-container { 
+            background: rgba(255, 255, 255, 0.1); 
+            padding: 20px; 
+            border-radius: 15px; 
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .test-container h3 { 
+            margin-top: 0; 
+            color: #ffd700; 
+        }
+        button { 
+            background: #4CAF50; 
+            color: white; 
+            border: none; 
+            padding: 10px 15px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            margin: 5px 5px 5px 0;
+            font-size: 14px;
+        }
+        button:hover { background: #45a049; }
+        button:disabled { background: #666; cursor: not-allowed; }
+        .result { 
+            margin-top: 10px; 
+            padding: 15px; 
+            background: rgba(0, 0, 0, 0.3); 
+            border-radius: 8px; 
+            white-space: pre-wrap; 
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .success { background: rgba(76, 175, 80, 0.3); }
+        .error { background: rgba(244, 67, 54, 0.3); }
+        .info { background: rgba(33, 150, 243, 0.3); }
+        input { 
+            width: 100%; 
+            padding: 8px; 
+            border: none; 
+            border-radius: 5px; 
+            margin: 5px 0; 
+            box-sizing: border-box;
+        }
+        .status-bar {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .status-item {
+            display: inline-block;
+            margin: 0 15px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .status-ok { background: rgba(76, 175, 80, 0.3); }
+        .status-warning { background: rgba(255, 193, 7, 0.3); }
+        .status-error { background: rgba(244, 67, 54, 0.3); }
+    </style>
+</head>
+<body>
+    <h1>🚀 ThreeAI Complete System Test</h1>
+    
+    <div class="status-bar" id="status-bar">
+        <div class="status-item" id="config-status">⏳ Checking Config...</div>
+        <div class="status-item" id="supabase-status">⏳ Checking Supabase...</div>
+        <div class="status-item" id="hf-status">⏳ Checking HF...</div>
+    </div>
+    
+    <div class="test-grid">
+        <!-- Configuration Test -->
+        <div class="test-container">
+            <h3>⚙️ Configuration</h3>
+            <button onclick="testConfig()">Test Config</button>
+            <div id="config-result" class="result">Click to test configuration...</div>
+        </div>
+        
+        <!-- Supabase Test -->
+        <div class="test-container">
+            <h3>🔐 Supabase Authentication</h3>
+            <button onclick="testSupabase()">Test Connection</button>
+            <button onclick="showAuthModal()">Test Auth Modal</button>
+            <div id="supabase-result" class="result">Click to test Supabase...</div>
+        </div>
+        
+        <!-- Hugging Face Test -->
+        <div class="test-container">
+            <h3>🤗 Hugging Face API</h3>
+            <button onclick="testHFToken()">Test Token</button>
+            <button onclick="testHFAPI()">Test API</button>
+            <div id="hf-result" class="result">Click to test Hugging Face...</div>
+        </div>
+        
+        <!-- AI Generation Test -->
+        <div class="test-container">
+            <h3>🎨 AI Generation</h3>
+            <input type="text" id="gen-prompt" placeholder="Enter prompt (e.g., 'red cube')" value="a red cube">
+            <button onclick="testGeneration()">Test Generation</button>
+            <div id="generation-result" class="result">Click to test AI generation...</div>
+        </div>
+        
+        <!-- Usage System Test -->
+        <div class="test-container">
+            <h3>📊 Usage System</h3>
+            <button onclick="testUsageSystem()">Test Usage Logic</button>
+            <button onclick="simulateAnonymous()">Simulate Anonymous</button>
+            <div id="usage-result" class="result">Click to test usage system...</div>
+        </div>
+        
+        <!-- Live App Test -->
+        <div class="test-container">
+            <h3>🌐 Live Application</h3>
+            <button onclick="openMainApp()">Open Main App</button>
+            <button onclick="testFullFlow()">Test Full Flow</button>
+            <div id="app-result" class="result">Click to test main application...</div>
+        </div>
+    </div>
+
+    <!-- Include all dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase-auth.js"></script>
+    
+    <script>
+        let supabaseAuth = null;
+        
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            initializeTests();
+        });
+        
+        function initializeTests() {
+            updateStatus('config-status', '✅ Config Loaded', 'ok');
+            
+            // Test Supabase initialization
+            try {
+                if (typeof SupabaseAuth !== 'undefined') {
+                    supabaseAuth = new SupabaseAuth();
+                    updateStatus('supabase-status', '✅ Supabase Ready', 'ok');
+                } else {
+                    updateStatus('supabase-status', '❌ Auth Missing', 'error');
+                }
+            } catch (error) {
+                updateStatus('supabase-status', '⚠️ Auth Error', 'warning');
+            }
+            
+            // Test HF config
+            if (typeof HUGGINGFACE_CONFIG !== 'undefined' && HUGGINGFACE_CONFIG.ownerToken) {
+                updateStatus('hf-status', '✅ HF Token Set', 'ok');
+            } else {
+                updateStatus('hf-status', '❌ No HF Token', 'error');
+            }
+        }
+        
+        function updateStatus(elementId, text, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = text;
+            element.className = `status-item status-${type}`;
+        }
+        
+        function updateResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `result ${type}`;
+        }
+        
+        function testConfig() {
+            updateResult('config-result', 'Testing configuration...', 'info');
+            
+            let results = [];
+            
+            // Test SUPABASE_CONFIG
+            if (typeof SUPABASE_CONFIG !== 'undefined') {
+                results.push('✅ SUPABASE_CONFIG loaded');
+                results.push(`   URL: ${SUPABASE_CONFIG.url}`);
+                results.push(`   Key: ${SUPABASE_CONFIG.anonKey.substring(0, 20)}...`);
+            } else {
+                results.push('❌ SUPABASE_CONFIG missing');
+            }
+            
+            // Test HUGGINGFACE_CONFIG
+            if (typeof HUGGINGFACE_CONFIG !== 'undefined') {
+                results.push('✅ HUGGINGFACE_CONFIG loaded');
+                results.push(`   Token: ${HUGGINGFACE_CONFIG.ownerToken.substring(0, 10)}...`);
+                results.push(`   Limits: ${JSON.stringify(HUGGINGFACE_CONFIG.limits)}`);
+            } else {
+                results.push('❌ HUGGINGFACE_CONFIG missing');
+            }
+            
+            // Test APP_CONFIG
+            if (typeof APP_CONFIG !== 'undefined') {
+                results.push('✅ APP_CONFIG loaded');
+                results.push(`   Features: ${JSON.stringify(APP_CONFIG.features)}`);
+            } else {
+                results.push('❌ APP_CONFIG missing');
+            }
+            
+            updateResult('config-result', results.join('\n'), 'success');
+        }
+        
+        async function testSupabase() {
+            updateResult('supabase-result', 'Testing Supabase connection...', 'info');
+            
+            try {
+                if (!supabaseAuth || !supabaseAuth.supabase) {
+                    throw new Error('Supabase not initialized');
+                }
+                
+                // Test connection with a simple query
+                const { data, error } = await supabaseAuth.supabase.auth.getSession();
+                
+                if (error) {
+                    throw error;
+                }
+                
+                let results = [];
+                results.push('✅ Supabase connection successful');
+                results.push(`✅ Session check passed`);
+                results.push(`✅ Current user: ${data.session ? data.session.user.email : 'Not logged in'}`);
+                
+                updateResult('supabase-result', results.join('\n'), 'success');
+            } catch (error) {
+                updateResult('supabase-result', `❌ Supabase error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testHFToken() {
+            updateResult('hf-result', 'Testing Hugging Face token...', 'info');
+            
+            try {
+                const token = HUGGINGFACE_CONFIG.ownerToken;
+                
+                const response = await fetch('https://huggingface.co/api/whoami', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    updateResult('hf-result', `✅ Token valid!\nUser: ${data.name}\nType: ${data.type || 'user'}`, 'success');
+                } else {
+                    updateResult('hf-result', `❌ Token invalid (${response.status})`, 'error');
+                }
+            } catch (error) {
+                updateResult('hf-result', `❌ Token test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testHFAPI() {
+            updateResult('hf-result', 'Testing HF API endpoint...', 'info');
+            
+            try {
+                const token = HUGGINGFACE_CONFIG.ownerToken;
+                
+                const response = await fetch('https://api-inference.huggingface.co/models/openai/point-e', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        inputs: 'test cube',
+                        options: { wait_for_model: true }
+                    })
+                });
+                
+                let results = [];
+                results.push(`Status: ${response.status}`);
+                
+                if (response.ok) {
+                    results.push('✅ API endpoint accessible');
+                    results.push('✅ Token authentication working');
+                } else if (response.status === 503) {
+                    results.push('⏳ Model loading (this is normal)');
+                    results.push('✅ API endpoint accessible');
+                } else {
+                    const errorText = await response.text();
+                    results.push(`❌ API error: ${errorText.substring(0, 200)}`);
+                }
+                
+                updateResult('hf-result', results.join('\n'), response.ok || response.status === 503 ? 'success' : 'error');
+            } catch (error) {
+                updateResult('hf-result', `❌ API test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testGeneration() {
+            const prompt = document.getElementById('gen-prompt').value;
+            updateResult('generation-result', `Testing generation: "${prompt}"...`, 'info');
+            
+            try {
+                const token = HUGGINGFACE_CONFIG.ownerToken;
+                
+                const response = await fetch('https://api-inference.huggingface.co/models/openai/point-e', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        inputs: prompt,
+                        options: { 
+                            wait_for_model: true,
+                            use_cache: false
+                        }
+                    })
+                });
+                
+                let results = [];
+                results.push(`Prompt: "${prompt}"`);
+                results.push(`Status: ${response.status}`);
+                
+                if (response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    results.push('✅ Generation successful!');
+                    results.push(`Content-Type: ${contentType}`);
+                    results.push('🎉 Your token can generate 3D models!');
+                } else if (response.status === 503) {
+                    results.push('⏳ Model still loading...');
+                    results.push('✅ Token working, try again in 1-2 minutes');
+                } else {
+                    const errorText = await response.text();
+                    results.push(`❌ Generation failed: ${errorText.substring(0, 200)}`);
+                }
+                
+                updateResult('generation-result', results.join('\n'), response.ok ? 'success' : (response.status === 503 ? 'info' : 'error'));
+            } catch (error) {
+                updateResult('generation-result', `❌ Generation error: ${error.message}`, 'error');
+            }
+        }
+        
+        function testUsageSystem() {
+            updateResult('usage-result', 'Testing usage system logic...', 'info');
+            
+            let results = [];
+            
+            // Test configuration
+            if (typeof HUGGINGFACE_CONFIG !== 'undefined') {
+                results.push('✅ Usage limits configured:');
+                results.push(`   Anonymous: ${HUGGINGFACE_CONFIG.limits.anonymous} generation(s)`);
+                results.push(`   Registered: ${HUGGINGFACE_CONFIG.limits.registered} generation(s)`);
+                results.push(`   Daily limit: ${HUGGINGFACE_CONFIG.limits.dailyLimit}`);
+            }
+            
+            // Check localStorage for anonymous usage
+            const hasUsedFree = localStorage.getItem('free_generation_used');
+            results.push(`\n📱 Anonymous status: ${hasUsedFree ? 'Used free generation' : 'Can use free generation'}`);
+            
+            // Check authentication status
+            if (supabaseAuth && supabaseAuth.isLoggedIn()) {
+                results.push('🔐 Authentication: Logged in');
+            } else {
+                results.push('👤 Authentication: Anonymous');
+            }
+            
+            updateResult('usage-result', results.join('\n'), 'success');
+        }
+        
+        function simulateAnonymous() {
+            localStorage.removeItem('free_generation_used');
+            updateResult('usage-result', '✅ Reset anonymous usage\nAnonymous user can now use 1 free generation', 'success');
+        }
+        
+        function showAuthModal() {
+            if (supabaseAuth) {
+                supabaseAuth.showAuthModal();
+                updateResult('supabase-result', '✅ Auth modal opened\nTry creating an account or logging in!', 'success');
+            } else {
+                updateResult('supabase-result', '❌ Auth system not available', 'error');
+            }
+        }
+        
+        function openMainApp() {
+            window.open('index.html', '_blank');
+            updateResult('app-result', '✅ Main app opened in new tab', 'success');
+        }
+        
+        function testFullFlow() {
+            updateResult('app-result', 'Testing full application flow...', 'info');
+            
+            let results = [];
+            results.push('🔍 Full System Check:');
+            
+            // Check all components
+            if (typeof SUPABASE_CONFIG !== 'undefined' && SUPABASE_CONFIG.url.includes('supabase.co')) {
+                results.push('✅ Supabase configured');
+            } else {
+                results.push('❌ Supabase not configured');
+            }
+            
+            if (typeof HUGGINGFACE_CONFIG !== 'undefined' && HUGGINGFACE_CONFIG.ownerToken.startsWith('hf_')) {
+                results.push('✅ Hugging Face token configured');
+            } else {
+                results.push('❌ Hugging Face token missing');
+            }
+            
+            if (typeof SupabaseAuth !== 'undefined') {
+                results.push('✅ Authentication system ready');
+            } else {
+                results.push('❌ Authentication system missing');
+            }
+            
+            results.push('\n🎯 Ready for:');
+            results.push('  • Anonymous users: 1 free generation');
+            results.push('  • Registered users: 3 free generations');
+            results.push('  • Own token users: Unlimited');
+            
+            updateResult('app-result', results.join('\n'), 'success');
+        }
+    </script>
+</body>
+</html>
