@@ -5,14 +5,14 @@
 
 // Supabase Configuration
 const SUPABASE_CONFIG = {
-    url: 'https://jmfgmpalqkdzckedbfbv.supabase.co', // Replace with your Supabase URL
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImptZmdtcGFscWtkemNrZWRiZmJ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQwNTA3NjMsImV4cCI6MjA2OTYyNjc2M30.zolFBiHRbZ2Rpy_po4Otb_7WKX_rm9XnrGqgPGbssvw' // Replace with your Supabase anon key
+    url: 'YOUR_SUPABASE_URL', // Replace with your Supabase URL
+    anonKey: 'YOUR_SUPABASE_ANON_KEY' // Replace with your Supabase anon key
 };
 
 // Hugging Face Configuration
 const HUGGINGFACE_CONFIG = {
     // Your actual Hugging Face token for the owner's free generations
-    ownerToken: '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',
+    ownerToken: 'YOUR_HUGGINGFACE_TOKEN',
     
     // API endpoints for different models
     endpoints: {

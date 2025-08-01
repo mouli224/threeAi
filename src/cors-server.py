@@ -50,7 +50,7 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             request_body = self.rfile.read(content_length)
             
             # Get HF token (you'd normally get this from config)
-            hf_token = "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"
+            hf_token = "YOUR_HUGGINGFACE_TOKEN"
             
             # Create request to Hugging Face
             req = urllib.request.Request(
