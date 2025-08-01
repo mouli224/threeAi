@@ -1077,3 +1077,44 @@ textarea:focus-visible {
     transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
 }
+
+/* ===== FOOTER STYLES ===== */
+.app-footer {
+    background: var(--white);
+    border-top: 1px solid var(--gray-200);
+    padding: var(--space-6) 0;
+    margin-top: auto;
+    position: relative;
+    z-index: 10;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-6);
+    text-align: center;
+}
+
+.copyright {
+    color: var(--gray-600);
+    font-size: var(--font-size-sm);
+    font-weight: 400;
+    margin: 0;
+    opacity: 0.8;
+    transition: opacity var(--transition-fast);
+}
+
+.copyright:hover {
+    opacity: 1;
+}
+
+/* Ensure body/html take full height for footer positioning */
+html, body {
+    height: 100%;
+}
+
+#app {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}

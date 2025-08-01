@@ -29,7 +29,15 @@ class ThreeJSApp {
         this.setupEventListeners();
         this.setupHints();
         this.loadHistory();
+        
+        // Start render loop
         this.render();
+        
+        // Initial render to ensure canvas is visible
+        setTimeout(() => {
+            this.renderer.render(this.scene, this.camera);
+            console.log('✅ Initial render completed');
+        }, 100);
     }
 
     setupDOM() {
@@ -54,7 +62,8 @@ class ThreeJSApp {
             0.1,
             1000
         );
-        this.camera.position.set(5, 5, 5);
+        this.camera.position.set(8, 6, 8);
+        this.camera.lookAt(0, 1, 0); // Look at center point above ground
 
         // Renderer
         this.renderer = new THREE.WebGLRenderer({
@@ -70,17 +79,8 @@ class ThreeJSApp {
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-        // Controls
-        if (window.THREE && THREE.OrbitControls) {
-            this.controls = new THREE.OrbitControls(this.camera, this.canvas);
-            this.controls.enableDamping = true;
-            this.controls.dampingFactor = 0.05;
-            this.controls.enableZoom = true;
-            this.controls.enablePan = true;
-            console.log('✅ OrbitControls initialized');
-        } else {
-            console.warn('⚠️ OrbitControls not available - using basic camera controls');
-        }
+        // Controls - Wait for OrbitControls to be available
+        this.setupControls();
 
         // Lighting
         this.setupLighting();
@@ -90,6 +90,34 @@ class ThreeJSApp {
 
         // Handle resize
         window.addEventListener('resize', () => this.onWindowResize());
+    }
+
+    setupControls() {
+        // Try multiple times to initialize controls
+        const initControls = () => {
+            if (window.THREE && THREE.OrbitControls) {
+                this.controls = new THREE.OrbitControls(this.camera, this.canvas);
+                this.controls.enableDamping = true;
+                this.controls.dampingFactor = 0.05;
+                this.controls.enableZoom = true;
+                this.controls.enablePan = true;
+                this.controls.target.set(0, 1, 0); // Look at center above ground
+                this.controls.update();
+                console.log('✅ OrbitControls initialized');
+                return true;
+            }
+            return false;
+        };
+
+        // Try immediately
+        if (!initControls()) {
+            // If not available, try again after a short delay
+            setTimeout(() => {
+                if (!initControls()) {
+                    console.warn('⚠️ OrbitControls not available - using basic camera controls');
+                }
+            }, 100);
+        }
     }
 
     setupLighting() {
@@ -380,16 +408,14 @@ class ThreeJSApp {
                     
                     <div class="contact-section">
                         <h4>📧 Get in Touch</h4>
-                        <p><strong>Email:</strong> hello@threeai.com</p>
-                        <p><strong>Support:</strong> support@threeai.com</p>
+                        <p><strong>Email:</strong> threeaiproject@gmail.com </p>
+                        <p><strong>Support:</strong> +91 7013938180</p>
                     </div>
                     
                     <div class="contact-section">
                         <h4>🌐 Follow Us</h4>
                         <div class="social-links">
-                            <a href="#" class="social-link">Twitter</a>
-                            <a href="#" class="social-link">GitHub</a>
-                            <a href="#" class="social-link">Discord</a>
+                            <a href="https://www.github.com/mouli224/" class="social-link">GitHub</a>
                         </div>
                     </div>
                     
@@ -434,19 +460,24 @@ class ThreeJSApp {
             // Clear existing objects
             this.clearScene();
 
+            // Hide empty state immediately
+            this.emptyState.style.display = 'none';
+
             // Parse prompt and create geometry
             await this.parseAndCreateGeometry(prompt);
 
             // Add to history
             this.addToHistory(prompt);
 
-            // Hide empty state
-            this.emptyState.style.display = 'none';
+            // Force a render update
+            this.renderer.render(this.scene, this.camera);
 
             this.showNotification('Scene created successfully!', 'success');
         } catch (error) {
             console.error('Error generating geometry:', error);
             this.showNotification('Error creating scene. Please try again.', 'error');
+            // Show empty state again if there's an error
+            this.emptyState.style.display = 'flex';
         } finally {
             this.showLoading(false);
             this.generateButton.disabled = false;
@@ -468,7 +499,7 @@ class ThreeJSApp {
             const color = colors[objectIndex] || this.getRandomColor();
             const position = positions[objectIndex] || {
                 x: (objectIndex - shapes.length / 2) * spacing,
-                y: 0,
+                y: 1, // Raise objects above ground plane
                 z: 0
             };
 
@@ -481,8 +512,43 @@ class ThreeJSApp {
             await this.createDefaultScene();
         }
 
+        // After creating objects, adjust camera to look at the scene
+        this.focusCameraOnScene();
+
         // Simulate processing time for better UX
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 300));
+    }
+
+    focusCameraOnScene() {
+        if (this.objects.length > 0) {
+            // Calculate bounding box of all objects
+            const box = new THREE.Box3();
+            this.objects.forEach(obj => {
+                box.expandByObject(obj);
+            });
+
+            // Get center of the scene
+            const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+
+            // Position camera to view all objects
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const fov = this.camera.fov * (Math.PI / 180);
+            let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
+            
+            cameraZ *= 2.5; // Add some padding
+            
+            this.camera.position.set(cameraZ, cameraZ, cameraZ);
+            this.camera.lookAt(center);
+
+            if (this.controls) {
+                this.controls.target.copy(center);
+                this.controls.update();
+            }
+
+            // Force render
+            this.renderer.render(this.scene, this.camera);
+        }
     }
 
     extractShapes(words) {
@@ -603,6 +669,9 @@ class ThreeJSApp {
             this.scene.add(mesh);
             this.objects.push(mesh);
 
+            // Force immediate render
+            this.renderer.render(this.scene, this.camera);
+
             // Animate scale up
             this.animateScaleUp(mesh, resolve);
         });
@@ -618,6 +687,9 @@ class ThreeJSApp {
             const eased = this.easeOutBounce(progress);
 
             object.scale.setScalar(0.1 + eased * 0.9);
+
+            // Force render during animation
+            this.renderer.render(this.scene, this.camera);
 
             if (progress < 1) {
                 requestAnimationFrame(animate);
@@ -644,14 +716,14 @@ class ThreeJSApp {
     createDefaultScene() {
         return new Promise(async (resolve) => {
             const defaultObjects = [
-                { shape: 'cube', color: 0xff6b6b, position: { x: -2, y: 0, z: 0 } },
-                { shape: 'sphere', color: 0x4ecdc4, position: { x: 0, y: 0, z: 0 } },
-                { shape: 'cylinder', color: 0x45b7d1, position: { x: 2, y: 0, z: 0 } }
+                { shape: 'cube', color: 0xff6b6b, position: { x: -2, y: 1, z: 0 } },
+                { shape: 'sphere', color: 0x4ecdc4, position: { x: 0, y: 1, z: 0 } },
+                { shape: 'cylinder', color: 0x45b7d1, position: { x: 2, y: 1, z: 0 } }
             ];
 
             for (const obj of defaultObjects) {
                 await this.createObject(obj.shape, obj.color, obj.position);
-                await new Promise(r => setTimeout(r, 200)); // Stagger creation
+                await new Promise(r => setTimeout(r, 150)); // Stagger creation
             }
 
             resolve();
@@ -768,11 +840,18 @@ class ThreeJSApp {
 
     resetCamera() {
         if (this.controls) {
-            this.controls.reset();
+            // Reset controls to initial position
+            this.camera.position.set(8, 6, 8);
+            this.controls.target.set(0, 1, 0);
+            this.controls.update();
         } else {
-            this.camera.position.set(5, 5, 5);
-            this.camera.lookAt(0, 0, 0);
+            // Fallback if no controls
+            this.camera.position.set(8, 6, 8);
+            this.camera.lookAt(0, 1, 0);
         }
+        
+        // Force render
+        this.renderer.render(this.scene, this.camera);
     }
 
     toggleFullscreen() {
@@ -832,7 +911,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     console.log('✅ THREE.js loaded successfully, version:', THREE.REVISION);
-    new ThreeJSApp();
+    
+    // Check for OrbitControls
+    if (THREE.OrbitControls) {
+        console.log('✅ OrbitControls available');
+    } else {
+        console.warn('⚠️ OrbitControls not found in THREE namespace');
+    }
+    
+    // Wait a bit for all scripts to load, then initialize
+    setTimeout(() => {
+        new ThreeJSApp();
+    }, 50);
 });
 
 // Export for potential module use
