@@ -7,7 +7,8 @@ class SupabaseAuth {
     constructor() {
         this.supabase = null;
         this.user = null;
-        this.initSupabase();
+        this.initialized = false;
+        this.initPromise = this.initSupabase();
     }
 
     /**
@@ -21,8 +22,10 @@ class SupabaseAuth {
                 return;
             }
 
-            if (!SUPABASE_CONFIG.url || !SUPABASE_CONFIG.anonKey) {
-                console.error('⚠️ Supabase URL or anon key not configured. Please update config.js');
+            if (!SUPABASE_CONFIG.url || !SUPABASE_CONFIG.anonKey || 
+                SUPABASE_CONFIG.url === 'YOUR_SUPABASE_URL' || 
+                SUPABASE_CONFIG.anonKey === 'YOUR_SUPABASE_ANON_KEY') {
+                console.error('⚠️ Supabase URL or anon key not configured. Please update config.js with real values');
                 return;
             }
 
@@ -36,6 +39,9 @@ class SupabaseAuth {
                 SUPABASE_CONFIG.url, 
                 SUPABASE_CONFIG.anonKey
             );
+
+            this.initialized = true;
+            console.log('✅ Supabase client initialized successfully');
             
             // Check for email confirmation in URL
             await this.handleEmailConfirmation();
@@ -453,6 +459,13 @@ class SupabaseAuth {
         btn.textContent = 'Signing in...';
 
         try {
+            // Wait for Supabase to be initialized
+            await this.initPromise;
+            
+            if (!this.supabase) {
+                throw new Error('Supabase client not initialized. Please check configuration.');
+            }
+
             const { data, error } = await this.supabase.auth.signInWithPassword({
                 email,
                 password
@@ -479,6 +492,13 @@ class SupabaseAuth {
         btn.textContent = 'Creating account...';
 
         try {
+            // Wait for Supabase to be initialized
+            await this.initPromise;
+            
+            if (!this.supabase) {
+                throw new Error('Supabase client not initialized. Please check configuration.');
+            }
+
             const { data, error } = await this.supabase.auth.signUp({
                 email,
                 password,
@@ -536,6 +556,13 @@ class SupabaseAuth {
      */
     async signOut() {
         try {
+            // Wait for Supabase to be initialized
+            await this.initPromise;
+            
+            if (!this.supabase) {
+                throw new Error('Supabase client not initialized');
+            }
+
             await this.supabase.auth.signOut();
             this.showNotification('👋 Successfully logged out!', 'info');
         } catch (error) {
