@@ -519,16 +519,20 @@ class ThreeJSApp {
 
         // Navigation links
         const navLinks = document.querySelectorAll('.nav-link');
+        console.log('Setting up navigation for', navLinks.length, 'links');
         navLinks.forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
                 const section = link.getAttribute('data-section');
+                console.log('Navigation clicked:', section);
                 this.handleNavigation(section, link);
             });
         });
     }
 
     handleNavigation(section, clickedLink) {
+        console.log('Handling navigation to:', section);
+        
         // Update active state
         document.querySelectorAll('.nav-link').forEach(link => {
             link.classList.remove('active');
@@ -546,17 +550,23 @@ class ThreeJSApp {
         // Handle different sections
         switch (section) {
             case 'home':
+                console.log('Showing home section');
                 this.showHomeSection();
                 break;
             case 'history':
+                console.log('Showing history section');
                 this.showHistorySection();
                 break;
             case 'gallery':
+                console.log('Showing gallery section');
                 this.showGallerySection();
                 break;
             case 'contact':
+                console.log('Showing contact section');
                 this.showContactSection();
                 break;
+            default:
+                console.log('Unknown section:', section);
         }
     }
 
@@ -569,24 +579,31 @@ class ThreeJSApp {
     }
 
     showHistorySection() {
+        console.log('Creating history modal...');
         this.hideModalSections();
         const modal = this.createModal('History', this.generateHistoryContent());
         document.body.appendChild(modal);
+        console.log('History modal created and added to body');
     }
 
     showGallerySection() {
+        console.log('Creating gallery modal...');
         this.hideModalSections();
         const modal = this.createModal('Gallery', this.generateGalleryContent());
         document.body.appendChild(modal);
+        console.log('Gallery modal created and added to body');
     }
 
     showContactSection() {
+        console.log('Creating contact modal...');
         this.hideModalSections();
         const modal = this.createModal('Contact Us', this.generateContactContent());
         document.body.appendChild(modal);
+        console.log('Contact modal created and added to body');
     }
 
     createModal(title, content) {
+        console.log('Creating modal with title:', title);
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
         modal.innerHTML = `
@@ -604,15 +621,33 @@ class ThreeJSApp {
         // Close modal functionality
         const closeBtn = modal.querySelector('.modal-close');
         closeBtn.addEventListener('click', () => {
+            console.log('Closing modal via close button');
             document.body.removeChild(modal);
         });
 
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
+                console.log('Closing modal via overlay click');
                 document.body.removeChild(modal);
             }
         });
 
+        // Add functionality to prompt tags if they exist
+        const promptTags = modal.querySelectorAll('.prompt-tag');
+        promptTags.forEach(tag => {
+            tag.addEventListener('click', () => {
+                const prompt = tag.getAttribute('data-prompt');
+                if (prompt && this.promptInput) {
+                    this.promptInput.value = prompt;
+                    this.showNotification(`✨ Prompt set: "${prompt}"`, 'success');
+                    document.body.removeChild(modal);
+                    // Switch to home section to see the prompt
+                    document.querySelector('[data-section="home"]').click();
+                }
+            });
+        });
+
+        console.log('Modal created successfully');
         return modal;
     }
 
