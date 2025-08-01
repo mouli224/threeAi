@@ -315,6 +315,9 @@ class ThreeJSApp {
         // Usage display elements
         this.proceduralCount = document.getElementById('procedural-count');
         this.hfCount = document.getElementById('hf-count');
+        
+        // Token management elements
+        this.tokenStatus = document.getElementById('token-status');
     }
 
     setupScene() {

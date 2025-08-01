@@ -1920,3 +1920,207 @@ html, body {
     color: var(--gray-400);
     cursor: not-allowed;
 }
+
+/* ================================
+   Token Management Enhanced Styles
+   ================================ */
+
+.token-status {
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    margin: var(--space-4) 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    transition: all var(--transition-smooth);
+}
+
+.token-status:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.1);
+}
+
+.token-active {
+    color: var(--success-color);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.token-inactive {
+    color: var(--warning-color);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.btn-add-token, .btn-remove-token {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.btn-add-token:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.btn-remove-token {
+    background: var(--danger-color);
+    font-size: var(--font-size-xs);
+    padding: var(--space-1) var(--space-3);
+}
+
+.btn-remove-token:hover {
+    background: #dc2626;
+}
+
+/* Token Input Modal Specific Styles */
+.modal .token-input {
+    width: 100%;
+    padding: var(--space-3);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    font-family: 'Courier New', monospace;
+    background: var(--gray-50);
+    transition: all var(--transition-fast);
+}
+
+.modal .token-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    background: white;
+}
+
+.modal .form-group {
+    margin-bottom: var(--space-4);
+}
+
+.modal .form-group label {
+    display: block;
+    margin-bottom: var(--space-2);
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
+.modal .form-group small {
+    display: block;
+    margin-top: var(--space-1);
+    font-size: var(--font-size-sm);
+    color: var(--gray-500);
+}
+
+.modal .benefits {
+    background: var(--success-light);
+    border: 1px solid var(--success-color);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    margin: var(--space-4) 0;
+}
+
+.modal .benefits ul {
+    margin: var(--space-2) 0 0;
+    padding-left: var(--space-5);
+}
+
+.modal .benefits li {
+    margin-bottom: var(--space-1);
+    color: var(--gray-700);
+}
+
+.modal .fallback {
+    background: var(--info-light);
+    border: 1px solid var(--info-color);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    margin: var(--space-4) 0;
+}
+
+.modal .token-security {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    margin-top: var(--space-4);
+}
+
+.modal .token-security p {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--gray-600);
+}
+
+/* High z-index for token modals */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000 !important; /* Very high z-index */
+    backdrop-filter: blur(4px);
+}
+
+.modal.active {
+    display: flex !important;
+}
+
+.modal-content {
+    background: white;
+    border-radius: var(--radius-xl);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow: hidden;
+    z-index: 10001 !important;
+    position: relative;
+    transform: scale(1);
+    transition: all var(--transition-smooth);
+}
+
+/* Responsive token management */
+@media (max-width: 768px) {
+    .token-status {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--space-2);
+    }
+    
+    .token-status .token-inactive,
+    .token-status .token-active {
+        justify-content: center;
+    }
+    
+    .btn-add-token, .btn-remove-token {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: var(--space-4);
+    }
+}
