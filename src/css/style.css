@@ -869,6 +869,37 @@ body {
 }
 
 /* ===== RESPONSIVE DESIGN ===== */
+
+/* Large Laptop/Desktop (1200px+) */
+@media (min-width: 1200px) {
+    #app {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    .input-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .modal-content {
+        max-width: 600px;
+    }
+}
+
+/* Standard Laptop (1024px - 1199px) */
+@media (max-width: 1199px) and (min-width: 1024px) {
+    #app {
+        padding: 0 var(--space-6);
+    }
+    
+    .input-container {
+        max-width: 700px;
+        margin: 0 auto;
+    }
+}
+
+/* Tablet/Small Laptop (768px - 1023px) */
 @media (max-width: 1024px) {
     #app {
         grid-template-areas: 
@@ -878,22 +909,44 @@ body {
             "sidebar";
         grid-template-columns: 1fr;
         grid-template-rows: auto auto 1fr auto;
+        padding: 0 var(--space-4);
     }
     
     .history-panel {
         max-height: 300px;
     }
+    
+    .input-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .usage-stats {
+        gap: var(--space-4);
+        flex-wrap: wrap;
+    }
+    
+    .usage-item {
+        flex: 1;
+        min-width: 150px;
+    }
 }
 
+/* Mobile (480px - 767px) */
 @media (max-width: 768px) {
     #app {
-        padding: 0 var(--space-4) var(--space-4);
-        gap: var(--space-4);
+        padding: 0 var(--space-3) var(--space-4);
+        gap: var(--space-3);
     }
     
     .navbar {
-        margin: 0 calc(-1 * var(--space-4));
-        padding: 0 var(--space-4);
+        margin: 0 calc(-1 * var(--space-3));
+        padding: 0 var(--space-3);
+        height: 60px;
+    }
+    
+    .navbar-brand {
+        font-size: var(--font-size-lg);
     }
     
     .navbar-nav {
@@ -909,6 +962,7 @@ body {
         gap: var(--space-1);
         padding: var(--space-4);
         box-shadow: var(--shadow-lg);
+        z-index: 1000;
     }
     
     .navbar-nav.mobile-open {
@@ -918,6 +972,36 @@ body {
     .mobile-menu-toggle {
         display: flex;
     }
+    
+    .input-container {
+        max-width: 100%;
+    }
+    
+    .input-wrapper textarea {
+        font-size: 16px; /* Prevent zoom on iOS */
+        min-height: 80px;
+    }
+    
+    .generate-button {
+        padding: var(--space-4);
+        font-size: var(--font-size-base);
+    }
+    
+    .usage-stats {
+        flex-direction: column;
+        gap: var(--space-2);
+    }
+    
+    .token-status {
+        flex-direction: column;
+        gap: var(--space-2);
+        text-align: center;
+    }
+    
+    .ai-toggle-wrapper {
+        justify-content: center;
+    }
+}
     
     .navbar-container {
         position: relative;
@@ -944,27 +1028,72 @@ body {
     }
 }
 
+/* Small Mobile (320px - 479px) */
 @media (max-width: 480px) {
-    .app-title {
-        font-size: var(--font-size-2xl);
-        flex-direction: column;
+    #app {
+        padding: 0 var(--space-2) var(--space-3);
         gap: var(--space-2);
     }
     
+    .navbar {
+        margin: 0 calc(-1 * var(--space-2));
+        padding: 0 var(--space-2);
+        height: 56px;
+    }
+    
+    .app-title {
+        font-size: var(--font-size-xl);
+        flex-direction: column;
+        gap: var(--space-1);
+    }
+    
     .input-section {
-        padding: var(--space-4);
+        padding: var(--space-3);
     }
     
     .canvas-wrapper {
-        height: 300px;
+        height: 280px;
+        margin: 0 calc(-1 * var(--space-2));
     }
     
     .brand-name {
-        font-size: var(--font-size-lg);
+        font-size: var(--font-size-base);
     }
     
     .brand-tagline {
-        display: none;
+        font-size: var(--font-size-xs);
+    }
+    
+    .generate-button {
+        padding: var(--space-3) var(--space-4);
+        font-size: var(--font-size-sm);
+    }
+    
+    .usage-stats {
+        padding: var(--space-2);
+    }
+    
+    .usage-item {
+        font-size: var(--font-size-sm);
+    }
+    
+    .token-status {
+        padding: var(--space-3);
+    }
+    
+    .modal-content {
+        width: 98%;
+        margin: var(--space-2);
+        max-height: 95vh;
+    }
+    
+    .modal-body {
+        padding: var(--space-4);
+        max-height: calc(95vh - 100px);
+    }
+    
+    .nav-link svg {
+        display: block;
     }
     
     .nav-link span {

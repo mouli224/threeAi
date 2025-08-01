@@ -211,14 +211,6 @@ class ThreeJSApp {
             setTimeout(() => {
                 this.showNotification('🤗 Hugging Face AI enabled (limited). Click AI button for better results!', 'info');
             }, 1000);
-            
-            // Show setup guide after a delay
-            setTimeout(() => {
-                if (typeof HuggingFaceTokenSetup !== 'undefined') {
-                    const tokenSetup = new HuggingFaceTokenSetup();
-                    tokenSetup.showTokenSetupGuide();
-                }
-            }, 3000);
         }
     }
 
@@ -238,17 +230,7 @@ class ThreeJSApp {
             `;
             
             aiToggle.addEventListener('click', () => {
-                // Check if click is for setup guide
-                if (!this.aiEnabled || !localStorage.getItem('hf_token')) {
-                    if (typeof HuggingFaceTokenSetup !== 'undefined') {
-                        const tokenSetup = new HuggingFaceTokenSetup();
-                        tokenSetup.showTokenSetupGuide();
-                    } else {
-                        this.toggleAI();
-                    }
-                } else {
-                    this.toggleAI();
-                }
+                this.toggleAI();
             });
             
             controlsContainer.appendChild(aiToggle);
