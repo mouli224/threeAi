@@ -1079,13 +1079,17 @@ class ThreeJSApp {
     }
 
     async parseAndCreateGeometry(prompt) {
+        console.log('🎯 Starting geometry generation for prompt:', prompt);
+        
         // Try AI generation first if enabled
         if (this.aiEnabled && this.aiGenerator) {
             try {
+                console.log('🤖 AI generation enabled, starting tryAIGeneration...');
                 this.showNotification('🤖 Generating with AI...', 'info');
                 const aiModel = await this.tryAIGeneration(prompt);
                 
                 if (aiModel) {
+                    console.log('✅ AI generation succeeded!');
                     // Position the AI-generated model
                     aiModel.position.set(0, 1, 0);
                     aiModel.castShadow = true;
@@ -1098,14 +1102,19 @@ class ThreeJSApp {
                     this.focusCameraOnScene();
                     this.showNotification('✨ AI model generated successfully!', 'success');
                     return; // Exit early if AI generation succeeded
+                } else {
+                    console.warn('⚠️ AI generation returned null, falling back to procedural');
                 }
             } catch (error) {
-                console.warn('AI generation failed, using fallback:', error);
+                console.error('❌ AI generation failed:', error);
                 this.showNotification('AI generation failed, using fallback...', 'warning');
             }
+        } else {
+            console.log('ℹ️ AI generation disabled or unavailable, using procedural');
         }
 
         // Fallback to procedural generation
+        console.log('🔄 Using procedural generation fallback...');
         await this.parseAndCreateGeometryProcedural(prompt);
     }
 

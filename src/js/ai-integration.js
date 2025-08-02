@@ -40,12 +40,22 @@ class AIModelGenerator {
             // Initialize GLB Model Library
             if (typeof GLBModelLibrary !== 'undefined') {
                 this.glbLibrary = new GLBModelLibrary();
-                console.log('✅ GLB Model Library initialized');
+                console.log('🔄 GLB Model Library created, initializing...');
                 
-                // Preload popular models in background
-                this.glbLibrary.preloadPopularModels().catch(error => 
-                    console.warn('Failed to preload GLB models:', error)
-                );
+                // Initialize the library and preload models
+                this.glbLibrary.initialize().then(success => {
+                    if (success) {
+                        console.log('✅ GLB Model Library initialized successfully');
+                        // Preload popular models in background
+                        this.glbLibrary.preloadPopularModels().catch(error => 
+                            console.warn('Failed to preload GLB models:', error)
+                        );
+                    } else {
+                        console.warn('⚠️ GLB Model Library initialization failed');
+                    }
+                }).catch(error => {
+                    console.error('❌ GLB Model Library initialization error:', error);
+                });
             } else {
                 console.log('ℹ️ GLB Model Library not available');
             }
@@ -125,6 +135,20 @@ class AIModelGenerator {
         
         if (!this.glbLibrary) {
             throw new Error('GLB Model Library not available');
+        }
+        
+        if (!this.glbLibrary.isReady) {
+            console.log('⏳ GLB Library not ready, waiting for initialization...');
+            // Wait for initialization
+            let attempts = 0;
+            while (!this.glbLibrary.isReady && attempts < 30) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (!this.glbLibrary.isReady) {
+                throw new Error('GLB Model Library failed to initialize');
+            }
         }
         
         try {
@@ -341,6 +365,9 @@ class AIModelGenerator {
         if (words.includes('tree') || words.includes('plant')) {
             // Enhanced tree with more detail
             return this.generateDetailedTree();
+        } else if (words.some(word => ['horse', 'dog', 'cat', 'bird', 'animal', 'creature', 'pet'].includes(word))) {
+            // Animal-specific generation
+            return this.generateAnimalBasic(words);
         } else {
             // Generic organic form
             return this.generateOrganicShape();

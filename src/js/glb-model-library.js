@@ -7,8 +7,9 @@ class GLBModelLibrary {
     constructor() {
         this.baseUrl = 'https://threejs.org/examples/models/gltf/';
         this.modelCache = new Map();
-        this.loader = new THREE.GLTFLoader();
+        this.loader = null; // Will be initialized later
         this.loadingPromises = new Map(); // Prevent duplicate loads
+        this.isReady = false;
         
         // Model mapping from keywords to actual GLB files
         this.modelMap = {
@@ -41,7 +42,34 @@ class GLBModelLibrary {
             'sculpture': 'DamagedHelmet.glb'
         };
         
-        console.log('🎯 GLB Model Library initialized with', Object.keys(this.modelMap).length, 'models');
+        console.log('🎯 GLB Model Library created with', Object.keys(this.modelMap).length, 'models');
+    }
+
+    /**
+     * Initialize the GLB loader when GLTFLoader is ready
+     */
+    async initialize() {
+        console.log('🔄 Initializing GLB Model Library...');
+        
+        // Wait for GLTFLoader to be ready
+        let attempts = 0;
+        const maxAttempts = 50; // 5 seconds
+        while (!window.GLTFLoaderReady && attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+        
+        if (!window.GLTFLoaderReady || typeof THREE === 'undefined' || !THREE.GLTFLoader) {
+            console.error('❌ GLTFLoader not available, GLB models will be disabled');
+            this.loader = null;
+            this.isReady = false;
+            return false;
+        }
+        
+        this.loader = new THREE.GLTFLoader();
+        this.isReady = true;
+        console.log('✅ GLB Model Library initialized with GLTFLoader');
+        return true;
     }
 
     /**
@@ -102,6 +130,12 @@ class GLBModelLibrary {
      */
     async loadModel(modelFile) {
         console.log('📦 Loading GLB model:', modelFile);
+        
+        // Check if loader is ready
+        if (!this.isReady || !this.loader) {
+            console.error('❌ GLB loader not ready, cannot load model:', modelFile);
+            throw new Error('GLB loader not initialized');
+        }
         
         // Check cache first
         if (this.modelCache.has(modelFile)) {

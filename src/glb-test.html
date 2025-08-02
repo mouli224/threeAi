@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GLB Test</title>
+</head>
+<body>
+    <h1>GLB Model Test</h1>
+    <div id="results"></div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="js/glb-model-library.js"></script>
+    
+    <script>
+        console.log('GLB Test starting...');
+        console.log('THREE available:', typeof THREE !== 'undefined');
+        console.log('GLTFLoader available:', typeof THREE.GLTFLoader !== 'undefined');
+        console.log('GLBModelLibrary available:', typeof GLBModelLibrary !== 'undefined');
+        
+        const resultsDiv = document.getElementById('results');
+        
+        async function testGLBLoading() {
+            try {
+                if (typeof GLBModelLibrary === 'undefined') {
+                    throw new Error('GLBModelLibrary not loaded');
+                }
+                
+                if (typeof THREE.GLTFLoader === 'undefined') {
+                    throw new Error('GLTFLoader not loaded');
+                }
+                
+                const library = new GLBModelLibrary();
+                resultsDiv.innerHTML += '<p>✅ GLBModelLibrary created</p>';
+                
+                // Test model loading
+                resultsDiv.innerHTML += '<p>🔄 Testing horse model loading...</p>';
+                
+                const model = await library.loadModelByPrompt('horse');
+                
+                if (model) {
+                    const info = library.getModelInfo(model);
+                    resultsDiv.innerHTML += `<p>✅ Horse model loaded! Meshes: ${info.meshes}, Vertices: ${info.vertices}</p>`;
+                } else {
+                    resultsDiv.innerHTML += '<p>❌ No model returned</p>';
+                }
+                
+            } catch (error) {
+                console.error('GLB test error:', error);
+                resultsDiv.innerHTML += `<p>❌ Error: ${error.message}</p>`;
+            }
+        }
+        
+        // Run test
+        testGLBLoading();
+    </script>
+</body>
+</html>
