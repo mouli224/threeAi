@@ -727,10 +727,16 @@ class ThreeJSApp {
                 <div class="gallery-examples">
                     <h3>Popular Prompts</h3>
                     <div class="prompt-examples">
-                        <span class="prompt-tag" data-prompt="golden pyramid on marble platform">Golden Pyramid</span>
-                        <span class="prompt-tag" data-prompt="three colorful spheres floating in space">Floating Spheres</span>
-                        <span class="prompt-tag" data-prompt="red cube blue cylinder green sphere arrangement">RGB Shapes</span>
-                        <span class="prompt-tag" data-prompt="crystal tower with glowing base">Crystal Tower</span>
+                        <div class="prompt-tag" data-prompt="horse galloping">🐎 Horse</div>
+                        <div class="prompt-tag" data-prompt="red ferrari sports car">🏎️ Ferrari</div>
+                        <div class="prompt-tag" data-prompt="robot walking">🤖 Robot</div>
+                        <div class="prompt-tag" data-prompt="soldier standing">🪖 Soldier</div>
+                        <div class="prompt-tag" data-prompt="parrot colorful bird">🦜 Parrot</div>
+                        <div class="prompt-tag" data-prompt="flamingo pink bird">🦩 Flamingo</div>
+                        <div class="prompt-tag" data-prompt="damaged helmet armor">⚔️ Helmet</div>
+                        <div class="prompt-tag" data-prompt="stork white bird">🕊️ Stork</div>
+                        <div class="prompt-tag" data-prompt="crystal sculpture">💎 Crystal</div>
+                        <div class="prompt-tag" data-prompt="spiral tower">🌪️ Spiral</div>
                     </div>
                 </div>
             </div>
@@ -1189,33 +1195,57 @@ class ThreeJSApp {
             return cachedModel;
         }
 
-        // Try Hugging Face first (prioritized)
+        // Generation strategies in priority order
         const strategies = [
-            () => this.aiGenerator.generateWithShapE(prompt),         // Primary: Hugging Face
-            () => this.aiGenerator.generateProceduralModel(prompt),   // Enhanced fallback
-            () => this.aiGenerator.generateWithLocalAI(prompt),       // Local AI if available
+            {
+                name: 'GLB Models',
+                fn: () => this.aiGenerator.generateWithGLBLibrary(prompt),
+                timeout: 15000
+            },
+            {
+                name: 'Hugging Face',
+                fn: () => this.aiGenerator.generateWithShapE(prompt),
+                timeout: 45000
+            },
+            {
+                name: 'Enhanced Procedural',
+                fn: () => this.aiGenerator.generateAIStyledProceduralModel(prompt),
+                timeout: 5000
+            },
+            {
+                name: 'Basic Procedural',
+                fn: () => this.aiGenerator.generateProceduralModel(prompt),
+                timeout: 3000
+            }
         ];
 
         for (const strategy of strategies) {
             try {
+                console.log(`🔄 Trying ${strategy.name}...`);
+                this.showNotification(`🔄 Trying ${strategy.name}...`, 'info');
+                
                 const model = await Promise.race([
-                    strategy(),
+                    strategy.fn(),
                     new Promise((_, reject) => 
-                        setTimeout(() => reject(new Error('Timeout')), 45000) // Increased timeout for HF
+                        setTimeout(() => reject(new Error('Timeout')), strategy.timeout)
                     )
                 ]);
 
                 if (model) {
+                    console.log(`✅ ${strategy.name} generation successful!`);
+                    this.showNotification(`✅ ${strategy.name} generation successful!`, 'success');
+                    
                     // Cache the successful generation
                     this.aiGenerator.cacheModel(prompt, model);
                     return model;
                 }
             } catch (error) {
-                console.warn('AI strategy failed:', error);
+                console.warn(`⚠️ ${strategy.name} failed:`, error.message);
                 continue;
             }
         }
 
+        console.error('❌ All generation strategies failed');
         return null; // All strategies failed
     }
 

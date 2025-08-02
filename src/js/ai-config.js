@@ -86,21 +86,56 @@ const AI_SERVICES = {
         enabled: true,
         baseUrl: 'https://threejs.org/examples/models/gltf/',
         models: {
-            animals: [
-                'horse.glb', 'parrot.glb', 'flamingo.glb'
-            ],
-            vehicles: [
-                'ferrari.glb', 'motorcycle.glb', 'helicopter.glb'
-            ],
-            furniture: [
-                'chair.glb', 'table.glb', 'lamp.glb'
-            ],
-            nature: [
-                'tree.glb', 'flower.glb', 'rock.glb'
-            ]
+            animals: {
+                'horse': 'Horse.glb',
+                'parrot': 'Parrot.glb', 
+                'flamingo': 'Flamingo.glb',
+                'stork': 'Stork.glb',
+                'dog': 'RobotExpressive.glb', // Will use as placeholder
+                'cat': 'RobotExpressive.glb', // Will use as placeholder
+                'bird': 'Parrot.glb'
+            },
+            vehicles: {
+                'car': 'ferrari.glb',
+                'truck': 'ferrari.glb', // Placeholder
+                'motorcycle': 'ferrari.glb', // Placeholder  
+                'helicopter': 'helicopter.glb',
+                'plane': 'helicopter.glb', // Placeholder
+                'airplane': 'helicopter.glb',
+                'aircraft': 'helicopter.glb',
+                'boat': 'ferrari.glb', // Placeholder
+                'ship': 'ferrari.glb' // Placeholder
+            },
+            robots: {
+                'robot': 'RobotExpressive.glb',
+                'droid': 'RobotExpressive.glb',
+                'android': 'RobotExpressive.glb'
+            },
+            characters: {
+                'soldier': 'Soldier.glb',
+                'character': 'RobotExpressive.glb',
+                'person': 'Soldier.glb',
+                'human': 'Soldier.glb'
+            },
+            abstract: {
+                'sculpture': 'DamagedHelmet.glb',
+                'helmet': 'DamagedHelmet.glb',
+                'armor': 'DamagedHelmet.glb'
+            }
         },
-        fallback: true, // Use when AI generation fails
-        description: 'Curated 3D models for common objects'
+        // Additional Three.js example models
+        alternativeModels: {
+            'ferrari': 'https://threejs.org/examples/models/gltf/ferrari.glb',
+            'robottExpressive': 'https://threejs.org/examples/models/gltf/RobotExpressive.glb',
+            'soldier': 'https://threejs.org/examples/models/gltf/Soldier.glb',
+            'damagedHelmet': 'https://threejs.org/examples/models/gltf/DamagedHelmet.glb',
+            'horse': 'https://threejs.org/examples/models/gltf/Horse.glb',
+            'parrot': 'https://threejs.org/examples/models/gltf/Parrot.glb',
+            'flamingo': 'https://threejs.org/examples/models/gltf/Flamingo.glb',
+            'stork': 'https://threejs.org/examples/models/gltf/Stork.glb'
+        },
+        fallback: true,
+        description: 'High-quality 3D models from Three.js examples'
     },
 
     // Procedural Generation

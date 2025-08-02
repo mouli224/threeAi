@@ -16,6 +16,7 @@ class AIModelGenerator {
         
         // Initialize specialized services
         this.huggingFaceService = null;
+        this.glbLibrary = null;
         this.initializeServices();
     }
 
@@ -34,6 +35,19 @@ class AIModelGenerator {
                 console.log('✅ Hugging Face service initialized with configured token');
             } else {
                 console.log('ℹ️ Hugging Face service not available');
+            }
+            
+            // Initialize GLB Model Library
+            if (typeof GLBModelLibrary !== 'undefined') {
+                this.glbLibrary = new GLBModelLibrary();
+                console.log('✅ GLB Model Library initialized');
+                
+                // Preload popular models in background
+                this.glbLibrary.preloadPopularModels().catch(error => 
+                    console.warn('Failed to preload GLB models:', error)
+                );
+            } else {
+                console.log('ℹ️ GLB Model Library not available');
             }
         } catch (error) {
             console.warn('Failed to initialize AI services:', error);
@@ -101,6 +115,63 @@ class AIModelGenerator {
     async fallbackToEnhancedProcedural(prompt) {
         console.log('🎨 Using enhanced procedural generation as fallback...');
         return this.generateAIStyledProceduralModel(prompt);
+    }
+
+    /**
+     * Generate using GLB Model Library
+     */
+    async generateWithGLBLibrary(prompt, options = {}) {
+        console.log('🎯 Using GLB Model Library for:', prompt);
+        
+        if (!this.glbLibrary) {
+            throw new Error('GLB Model Library not available');
+        }
+        
+        try {
+            const model = await this.glbLibrary.loadModelByPrompt(prompt);
+            
+            if (model) {
+                console.log('✅ GLB model loaded successfully');
+                
+                // Add some visual effects if requested
+                if (options.addEffects) {
+                    this.addVisualEffects(model, options);
+                }
+                
+                return model;
+            } else {
+                throw new Error('No suitable GLB model found');
+            }
+        } catch (error) {
+            console.error('GLB model loading failed:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Add visual effects to GLB models
+     */
+    addVisualEffects(model, options = {}) {
+        if (options.glow) {
+            // Add glow effect
+            model.traverse((child) => {
+                if (child.isMesh && child.material) {
+                    child.material.emissive = new THREE.Color(0x222222);
+                }
+            });
+        }
+        
+        if (options.wireframe) {
+            // Add wireframe overlay
+            model.traverse((child) => {
+                if (child.isMesh) {
+                    const wireframe = new THREE.WireframeGeometry(child.geometry);
+                    const wireframeMaterial = new THREE.LineBasicMaterial({ color: 0x00ff00 });
+                    const wireframeMesh = new THREE.LineSegments(wireframe, wireframeMaterial);
+                    child.add(wireframeMesh);
+                }
+            });
+        }
     }
 
     /**
@@ -204,7 +275,26 @@ class AIModelGenerator {
      * Generate AI-styled procedural model (enhanced fallback)
      */
     async generateAIStyledProceduralModel(prompt) {
-        console.log('🎨 Generating AI-styled procedural model...');
+        console.log('🎨 Generating AI-styled model for prompt:', prompt);
+        
+        // 1. Try GLB models first (highest quality)
+        if (this.glbLibrary) {
+            try {
+                console.log('🎯 Attempting GLB model loading...');
+                const glbModel = await this.glbLibrary.loadModelByPrompt(prompt);
+                if (glbModel) {
+                    console.log('✅ GLB model loaded successfully!');
+                    const info = this.glbLibrary.getModelInfo(glbModel);
+                    console.log('📊 GLB Model info:', info);
+                    return glbModel;
+                }
+            } catch (error) {
+                console.warn('GLB model loading failed:', error);
+            }
+        }
+        
+        // 2. Fallback to enhanced procedural generation
+        console.log('🔄 Falling back to enhanced procedural generation...');
         
         const words = prompt.toLowerCase().split(' ');
         
@@ -224,6 +314,8 @@ class AIModelGenerator {
                 break;
             }
         }
+        
+        console.log(`🎯 Using category: ${category} for enhanced procedural generation`);
         
         // Generate based on category with AI-like randomization
         switch (category) {
