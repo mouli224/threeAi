@@ -1104,7 +1104,53 @@ class ThreeJSApp {
     }
 
     async parseAndCreateGeometryProcedural(prompt) {
-        // Fallback to procedural generation (your existing code)
+        console.log('🎨 Using enhanced procedural generation for:', prompt);
+        
+        try {
+            // Use the enhanced procedural generation from AIModelGenerator
+            let model = null;
+            
+            if (this.aiGenerator) {
+                // Try enhanced AI-styled procedural first
+                try {
+                    model = await this.aiGenerator.generateAIStyledProceduralModel(prompt);
+                    console.log('✅ Enhanced procedural generation successful');
+                } catch (error) {
+                    console.warn('Enhanced procedural failed, trying basic:', error);
+                    model = await this.aiGenerator.generateProceduralModel(prompt);
+                }
+            }
+            
+            if (model) {
+                // Position the model
+                model.position.set(0, 0, 0);
+                model.castShadow = true;
+                model.receiveShadow = true;
+                
+                this.scene.add(model);
+                this.objects.push(model);
+                
+                // Focus camera on the new model
+                this.focusCameraOnScene();
+                console.log('✅ Enhanced procedural model added to scene');
+                
+            } else {
+                // Final fallback to old procedural method
+                console.log('🔄 Using legacy procedural fallback...');
+                await this.legacyProceduralGeneration(prompt);
+            }
+            
+        } catch (error) {
+            console.error('Enhanced procedural generation failed:', error);
+            await this.legacyProceduralGeneration(prompt);
+        }
+        
+        // Simulate processing time for better UX
+        await new Promise(resolve => setTimeout(resolve, 300));
+    }
+
+    async legacyProceduralGeneration(prompt) {
+        // Original procedural generation as fallback
         const words = prompt.toLowerCase().split(' ');
         const shapes = this.extractShapes(words);
         const colors = this.extractColors(words);
@@ -1133,9 +1179,6 @@ class ThreeJSApp {
 
         // After creating objects, adjust camera to look at the scene
         this.focusCameraOnScene();
-
-        // Simulate processing time for better UX
-        await new Promise(resolve => setTimeout(resolve, 300));
     }
 
     async tryAIGeneration(prompt) {

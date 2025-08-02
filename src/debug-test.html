@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Test - AI Generation</title>
+</head>
+<body>
+    <h1>Generation Test</h1>
+    <input type="text" id="test-prompt" placeholder="Enter prompt (e.g., horse, cube, car)" value="horse">
+    <button id="test-generate">Test Generation</button>
+    <button id="test-procedural">Test Procedural Only</button>
+    <div id="test-results"></div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="js/ai-integration.js"></script>
+    <script>
+        console.log('Debug test loaded');
+        
+        // Test the AI generator directly
+        const generator = new AIModelGenerator();
+        const resultsDiv = document.getElementById('test-results');
+        
+        document.getElementById('test-generate').addEventListener('click', async () => {
+            const prompt = document.getElementById('test-prompt').value;
+            console.log('Testing generation for:', prompt);
+            resultsDiv.innerHTML = 'Testing...';
+            
+            try {
+                // Test enhanced AI styled procedural
+                const model = await generator.generateAIStyledProceduralModel(prompt);
+                if (model) {
+                    resultsDiv.innerHTML = `✅ Success! Generated model type: ${model.type || 'Group'}, children: ${model.children ? model.children.length : 'N/A'}`;
+                } else {
+                    resultsDiv.innerHTML = '❌ Failed: No model returned';
+                }
+            } catch (error) {
+                console.error('Generation error:', error);
+                resultsDiv.innerHTML = `❌ Error: ${error.message}`;
+            }
+        });
+        
+        document.getElementById('test-procedural').addEventListener('click', async () => {
+            const prompt = document.getElementById('test-prompt').value;
+            console.log('Testing basic procedural for:', prompt);
+            resultsDiv.innerHTML = 'Testing basic procedural...';
+            
+            try {
+                const model = await generator.generateProceduralModel(prompt);
+                if (model) {
+                    resultsDiv.innerHTML = `✅ Basic Success! Generated model type: ${model.type || 'Group'}, children: ${model.children ? model.children.length : 'N/A'}`;
+                } else {
+                    resultsDiv.innerHTML = '❌ Basic Failed: No model returned';
+                }
+            } catch (error) {
+                console.error('Basic generation error:', error);
+                resultsDiv.innerHTML = `❌ Basic Error: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>
