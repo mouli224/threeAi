@@ -540,19 +540,584 @@ class AIModelGenerator {
      * Fallback to procedural generation
      */
     generateProceduralModel(prompt) {
-        // Simple procedural generation based on keywords
+        // Enhanced procedural generation based on keywords
         const words = prompt.toLowerCase().split(' ');
+        console.log('🎨 Generating procedural model for:', prompt);
+        console.log('🔍 Keywords found:', words);
         
-        if (words.includes('tree') || words.includes('plant')) {
-            return this.generateTree();
-        } else if (words.includes('building') || words.includes('house')) {
-            return this.generateBuilding();
-        } else if (words.includes('car') || words.includes('vehicle')) {
-            return this.generateCar();
+        // Advanced pattern matching
+        const patterns = {
+            animals: ['horse', 'dog', 'cat', 'bird', 'animal', 'creature', 'pet'],
+            vehicles: ['car', 'truck', 'plane', 'airplane', 'boat', 'ship', 'vehicle', 'aircraft'],
+            buildings: ['building', 'house', 'tower', 'castle', 'structure', 'architecture'],
+            nature: ['tree', 'plant', 'flower', 'mountain', 'rock', 'bush'],
+            furniture: ['chair', 'table', 'lamp', 'desk', 'bookshelf', 'furniture'],
+            shapes: ['cube', 'sphere', 'cylinder', 'pyramid', 'cone', 'box'],
+            abstract: ['sculpture', 'art', 'abstract', 'crystal', 'spiral']
+        };
+        
+        // Find the best matching category
+        let bestCategory = 'shapes';
+        let maxMatches = 0;
+        
+        for (const [category, keywords] of Object.entries(patterns)) {
+            const matches = keywords.filter(keyword => words.includes(keyword)).length;
+            if (matches > maxMatches) {
+                maxMatches = matches;
+                bestCategory = category;
+            }
         }
         
-        // Default to basic shape
-        return this.generateBasicShape(words);
+        console.log(`🎯 Best category: ${bestCategory} (${maxMatches} matches)`);
+        
+        // Generate based on category
+        switch (bestCategory) {
+            case 'animals':
+                return this.generateAnimalBasic(words);
+            case 'vehicles':
+                return this.generateVehicleBasic(words);
+            case 'buildings':
+                return this.generateBuildingBasic(words);
+            case 'nature':
+                return this.generateNatureBasic(words);
+            case 'furniture':
+                return this.generateFurnitureBasic(words);
+            case 'abstract':
+                return this.generateAbstractBasic(words);
+            default:
+                return this.generateBasicShape(words);
+        }
+    }
+
+    generateAnimalBasic(words) {
+        if (words.includes('horse')) {
+            return this.generateHorse();
+        } else if (words.includes('dog')) {
+            return this.generateDog();
+        } else if (words.includes('cat')) {
+            return this.generateCat();
+        } else if (words.includes('bird')) {
+            return this.generateBird();
+        } else {
+            return this.generateGenericAnimal();
+        }
+    }
+
+    generateHorse() {
+        const group = new THREE.Group();
+        
+        // Body
+        const bodyGeometry = new THREE.SphereGeometry(0.4, 12, 8);
+        const bodyMaterial = new THREE.MeshPhongMaterial({ color: 0x8B4513 });
+        const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+        body.scale.set(1.5, 0.8, 1);
+        body.position.y = 0.8;
+        group.add(body);
+        
+        // Head/Neck
+        const neckGeometry = new THREE.CylinderGeometry(0.15, 0.2, 0.6, 8);
+        const neck = new THREE.Mesh(neckGeometry, bodyMaterial);
+        neck.position.set(0.6, 1.2, 0);
+        neck.rotation.z = Math.PI / 6;
+        group.add(neck);
+        
+        // Head
+        const headGeometry = new THREE.SphereGeometry(0.2, 12, 8);
+        const head = new THREE.Mesh(headGeometry, bodyMaterial);
+        head.position.set(0.8, 1.6, 0);
+        group.add(head);
+        
+        // Ears
+        const earGeometry = new THREE.ConeGeometry(0.05, 0.15, 8);
+        const leftEar = new THREE.Mesh(earGeometry, bodyMaterial);
+        const rightEar = new THREE.Mesh(earGeometry, bodyMaterial);
+        leftEar.position.set(0.75, 1.75, -0.1);
+        rightEar.position.set(0.75, 1.75, 0.1);
+        group.add(leftEar);
+        group.add(rightEar);
+        
+        // Legs
+        const legGeometry = new THREE.CylinderGeometry(0.08, 0.08, 0.6, 8);
+        const legMaterial = new THREE.MeshPhongMaterial({ color: 0x654321 });
+        const legPositions = [[-0.3, 0.3, -0.3], [0.3, 0.3, -0.3], [-0.3, 0.3, 0.3], [0.3, 0.3, 0.3]];
+        
+        legPositions.forEach(pos => {
+            const leg = new THREE.Mesh(legGeometry, legMaterial);
+            leg.position.set(...pos);
+            group.add(leg);
+        });
+        
+        // Tail
+        const tailGeometry = new THREE.CylinderGeometry(0.03, 0.01, 0.8, 8);
+        const tail = new THREE.Mesh(tailGeometry, bodyMaterial);
+        tail.position.set(-0.8, 1, 0);
+        tail.rotation.z = Math.PI / 4;
+        group.add(tail);
+        
+        // Mane
+        const maneGeometry = new THREE.SphereGeometry(0.2, 8, 6);
+        const maneMaterial = new THREE.MeshPhongMaterial({ color: 0x4A4A4A });
+        const mane = new THREE.Mesh(maneGeometry, maneMaterial);
+        mane.scale.set(0.3, 1, 1);
+        mane.position.set(0.6, 1.3, 0);
+        group.add(mane);
+        
+        return group;
+    }
+
+    generateVehicleBasic(words) {
+        if (words.includes('plane') || words.includes('airplane') || words.includes('aircraft')) {
+            return this.generateAirplane();
+        } else if (words.includes('boat') || words.includes('ship')) {
+            return this.generateBoat();
+        } else {
+            return this.generateCar();
+        }
+    }
+
+    generateAirplane() {
+        const group = new THREE.Group();
+        
+        // Fuselage (body)
+        const fuselageGeometry = new THREE.CylinderGeometry(0.15, 0.05, 2.5, 16);
+        const fuselageMaterial = new THREE.MeshPhongMaterial({ color: 0xCCCCCC });
+        const fuselage = new THREE.Mesh(fuselageGeometry, fuselageMaterial);
+        fuselage.rotation.z = Math.PI / 2;
+        fuselage.position.y = 0.8;
+        group.add(fuselage);
+        
+        // Wings
+        const wingGeometry = new THREE.BoxGeometry(2.5, 0.1, 0.8);
+        const wingMaterial = new THREE.MeshPhongMaterial({ color: 0xAAAAAA });
+        const wings = new THREE.Mesh(wingGeometry, wingMaterial);
+        wings.position.y = 0.8;
+        group.add(wings);
+        
+        // Tail wings
+        const tailWingGeometry = new THREE.BoxGeometry(0.8, 0.05, 0.4);
+        const tailWings = new THREE.Mesh(tailWingGeometry, wingMaterial);
+        tailWings.position.set(-1, 0.8, 0);
+        group.add(tailWings);
+        
+        // Vertical tail
+        const verticalTailGeometry = new THREE.BoxGeometry(0.1, 0.5, 0.3);
+        const verticalTail = new THREE.Mesh(verticalTailGeometry, wingMaterial);
+        verticalTail.position.set(-1, 1.1, 0);
+        group.add(verticalTail);
+        
+        // Propeller
+        const propGeometry = new THREE.BoxGeometry(0.8, 0.05, 0.05);
+        const propMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
+        const propeller = new THREE.Mesh(propGeometry, propMaterial);
+        propeller.position.set(1.3, 0.8, 0);
+        group.add(propeller);
+        
+        return group;
+    }
+
+    generateBoat() {
+        const group = new THREE.Group();
+        
+        // Hull
+        const hullGeometry = new THREE.SphereGeometry(0.6, 16, 8);
+        const hullMaterial = new THREE.MeshPhongMaterial({ color: 0x8B4513 });
+        const hull = new THREE.Mesh(hullGeometry, hullMaterial);
+        hull.scale.set(2, 0.5, 1);
+        hull.position.y = 0.3;
+        group.add(hull);
+        
+        // Deck
+        const deckGeometry = new THREE.BoxGeometry(2.2, 0.1, 1.1);
+        const deckMaterial = new THREE.MeshPhongMaterial({ color: 0xF5DEB3 });
+        const deck = new THREE.Mesh(deckGeometry, deckMaterial);
+        deck.position.y = 0.6;
+        group.add(deck);
+        
+        // Cabin
+        const cabinGeometry = new THREE.BoxGeometry(0.8, 0.6, 0.8);
+        const cabinMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF });
+        const cabin = new THREE.Mesh(cabinGeometry, cabinMaterial);
+        cabin.position.y = 0.95;
+        group.add(cabin);
+        
+        // Mast
+        const mastGeometry = new THREE.CylinderGeometry(0.03, 0.03, 1.5, 8);
+        const mastMaterial = new THREE.MeshPhongMaterial({ color: 0x8B4513 });
+        const mast = new THREE.Mesh(mastGeometry, mastMaterial);
+        mast.position.set(0.5, 1.6, 0);
+        group.add(mast);
+        
+        // Sail
+        const sailGeometry = new THREE.PlaneGeometry(1, 1.2);
+        const sailMaterial = new THREE.MeshPhongMaterial({ 
+            color: 0xFFFFFF,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.9
+        });
+        const sail = new THREE.Mesh(sailGeometry, sailMaterial);
+        sail.position.set(0.2, 1.6, 0);
+        group.add(sail);
+        
+        return group;
+    }
+
+    generateBuildingBasic(words) {
+        return this.generateBuilding();
+    }
+
+    generateNatureBasic(words) {
+        if (words.includes('tree')) {
+            return this.generateTree();
+        } else if (words.includes('flower')) {
+            return this.generateFlower();
+        } else if (words.includes('mountain')) {
+            return this.generateMountain();
+        } else {
+            return this.generateTree(); // Default to tree
+        }
+    }
+
+    generateFlower() {
+        const group = new THREE.Group();
+        
+        // Stem
+        const stemGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.8, 8);
+        const stemMaterial = new THREE.MeshPhongMaterial({ color: 0x228B22 });
+        const stem = new THREE.Mesh(stemGeometry, stemMaterial);
+        stem.position.y = 0.4;
+        group.add(stem);
+        
+        // Petals
+        const petalGeometry = new THREE.SphereGeometry(0.15, 8, 6);
+        const petalMaterial = new THREE.MeshPhongMaterial({ color: 0xFF69B4 });
+        
+        for (let i = 0; i < 6; i++) {
+            const petal = new THREE.Mesh(petalGeometry, petalMaterial);
+            const angle = (i / 6) * Math.PI * 2;
+            petal.position.set(
+                Math.cos(angle) * 0.2,
+                0.8,
+                Math.sin(angle) * 0.2
+            );
+            petal.scale.set(0.5, 1, 1);
+            group.add(petal);
+        }
+        
+        // Center
+        const centerGeometry = new THREE.SphereGeometry(0.08, 8, 6);
+        const centerMaterial = new THREE.MeshPhongMaterial({ color: 0xFFD700 });
+        const center = new THREE.Mesh(centerGeometry, centerMaterial);
+        center.position.y = 0.8;
+        group.add(center);
+        
+        return group;
+    }
+
+    generateMountain() {
+        const group = new THREE.Group();
+        
+        // Main peak
+        const peakGeometry = new THREE.ConeGeometry(1, 1.5, 8);
+        const peakMaterial = new THREE.MeshPhongMaterial({ color: 0x8B7355 });
+        const peak = new THREE.Mesh(peakGeometry, peakMaterial);
+        peak.position.y = 0.75;
+        group.add(peak);
+        
+        // Snow cap
+        const snowGeometry = new THREE.ConeGeometry(0.6, 0.4, 8);
+        const snowMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF });
+        const snow = new THREE.Mesh(snowGeometry, snowMaterial);
+        snow.position.y = 1.3;
+        group.add(snow);
+        
+        // Side hills
+        const hillGeometry = new THREE.ConeGeometry(0.7, 1, 8);
+        const leftHill = new THREE.Mesh(hillGeometry, peakMaterial);
+        const rightHill = new THREE.Mesh(hillGeometry, peakMaterial);
+        leftHill.position.set(-0.8, 0.5, 0);
+        rightHill.position.set(0.8, 0.5, 0);
+        group.add(leftHill);
+        group.add(rightHill);
+        
+        return group;
+    }
+
+    generateFurnitureBasic(words) {
+        if (words.includes('chair')) {
+            return this.generateChair();
+        } else if (words.includes('table')) {
+            return this.generateTable();
+        } else if (words.includes('lamp')) {
+            return this.generateLamp();
+        } else {
+            return this.generateChair(); // Default to chair
+        }
+    }
+
+    generateAbstractBasic(words) {
+        if (words.includes('crystal')) {
+            return this.generateCrystal();
+        } else if (words.includes('spiral')) {
+            return this.generateSpiral();
+        } else {
+            return this.generateAbstractSculpture();
+        }
+    }
+
+    generateAbstractSculpture() {
+        const group = new THREE.Group();
+        
+        // Create multiple geometric shapes in an artistic arrangement
+        const shapes = [
+            { geo: new THREE.BoxGeometry(0.3, 0.3, 0.3), pos: [0, 0.5, 0], rot: [0.2, 0.3, 0.1] },
+            { geo: new THREE.SphereGeometry(0.2, 12, 8), pos: [0.4, 0.8, 0.2], rot: [0, 0, 0] },
+            { geo: new THREE.ConeGeometry(0.15, 0.6, 8), pos: [-0.3, 0.7, -0.2], rot: [0.1, 0, 0.2] }
+        ];
+        
+        shapes.forEach((shape, index) => {
+            const material = new THREE.MeshPhongMaterial({
+                color: new THREE.Color().setHSL(index * 0.3, 0.7, 0.6)
+            });
+            const mesh = new THREE.Mesh(shape.geo, material);
+            mesh.position.set(...shape.pos);
+            mesh.rotation.set(...shape.rot);
+            group.add(mesh);
+        });
+        
+        return group;
+    }
+
+    // Missing basic generation methods
+    generateDog() {
+        const group = new THREE.Group();
+        
+        // Body
+        const bodyGeometry = new THREE.SphereGeometry(0.3, 12, 8);
+        const bodyMaterial = new THREE.MeshPhongMaterial({ color: 0x8B4513 });
+        const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+        body.scale.set(1.2, 0.8, 0.8);
+        body.position.y = 0.5;
+        group.add(body);
+        
+        // Head
+        const headGeometry = new THREE.SphereGeometry(0.2, 12, 8);
+        const head = new THREE.Mesh(headGeometry, bodyMaterial);
+        head.position.set(0.4, 0.6, 0);
+        group.add(head);
+        
+        // Ears
+        const earGeometry = new THREE.SphereGeometry(0.08, 8, 6);
+        const leftEar = new THREE.Mesh(earGeometry, bodyMaterial);
+        const rightEar = new THREE.Mesh(earGeometry, bodyMaterial);
+        leftEar.position.set(0.35, 0.75, -0.12);
+        rightEar.position.set(0.35, 0.75, 0.12);
+        group.add(leftEar);
+        group.add(rightEar);
+        
+        // Legs
+        const legGeometry = new THREE.CylinderGeometry(0.06, 0.06, 0.3, 8);
+        const legPositions = [[-0.15, 0.15, -0.15], [0.15, 0.15, -0.15], [-0.15, 0.15, 0.15], [0.15, 0.15, 0.15]];
+        
+        legPositions.forEach(pos => {
+            const leg = new THREE.Mesh(legGeometry, bodyMaterial);
+            leg.position.set(...pos);
+            group.add(leg);
+        });
+        
+        // Tail
+        const tailGeometry = new THREE.CylinderGeometry(0.03, 0.02, 0.2, 8);
+        const tail = new THREE.Mesh(tailGeometry, bodyMaterial);
+        tail.position.set(-0.4, 0.7, 0);
+        tail.rotation.z = Math.PI / 3;
+        group.add(tail);
+        
+        return group;
+    }
+
+    generateCat() {
+        const group = new THREE.Group();
+        
+        // Body (smaller than dog)
+        const bodyGeometry = new THREE.SphereGeometry(0.25, 12, 8);
+        const bodyMaterial = new THREE.MeshPhongMaterial({ color: 0x696969 });
+        const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+        body.scale.set(1.1, 0.7, 0.7);
+        body.position.y = 0.4;
+        group.add(body);
+        
+        // Head
+        const headGeometry = new THREE.SphereGeometry(0.15, 12, 8);
+        const head = new THREE.Mesh(headGeometry, bodyMaterial);
+        head.position.set(0.3, 0.5, 0);
+        group.add(head);
+        
+        // Pointed ears
+        const earGeometry = new THREE.ConeGeometry(0.06, 0.12, 8);
+        const leftEar = new THREE.Mesh(earGeometry, bodyMaterial);
+        const rightEar = new THREE.Mesh(earGeometry, bodyMaterial);
+        leftEar.position.set(0.25, 0.62, -0.08);
+        rightEar.position.set(0.25, 0.62, 0.08);
+        group.add(leftEar);
+        group.add(rightEar);
+        
+        // Legs (thinner than dog)
+        const legGeometry = new THREE.CylinderGeometry(0.04, 0.04, 0.25, 8);
+        const legPositions = [[-0.1, 0.125, -0.1], [0.1, 0.125, -0.1], [-0.1, 0.125, 0.1], [0.1, 0.125, 0.1]];
+        
+        legPositions.forEach(pos => {
+            const leg = new THREE.Mesh(legGeometry, bodyMaterial);
+            leg.position.set(...pos);
+            group.add(leg);
+        });
+        
+        // Long tail
+        const tailGeometry = new THREE.CylinderGeometry(0.02, 0.01, 0.4, 8);
+        const tail = new THREE.Mesh(tailGeometry, bodyMaterial);
+        tail.position.set(-0.35, 0.5, 0);
+        tail.rotation.z = Math.PI / 6;
+        group.add(tail);
+        
+        return group;
+    }
+
+    generateBird() {
+        const group = new THREE.Group();
+        
+        // Body
+        const bodyGeometry = new THREE.SphereGeometry(0.15, 12, 8);
+        const bodyMaterial = new THREE.MeshPhongMaterial({ color: 0x4169E1 });
+        const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+        body.scale.set(1, 0.8, 0.6);
+        body.position.y = 0.4;
+        group.add(body);
+        
+        // Head
+        const headGeometry = new THREE.SphereGeometry(0.1, 12, 8);
+        const head = new THREE.Mesh(headGeometry, bodyMaterial);
+        head.position.set(0.2, 0.5, 0);
+        group.add(head);
+        
+        // Beak
+        const beakGeometry = new THREE.ConeGeometry(0.02, 0.08, 8);
+        const beakMaterial = new THREE.MeshPhongMaterial({ color: 0xFF8C00 });
+        const beak = new THREE.Mesh(beakGeometry, beakMaterial);
+        beak.position.set(0.28, 0.5, 0);
+        beak.rotation.z = -Math.PI / 2;
+        group.add(beak);
+        
+        // Wings
+        const wingGeometry = new THREE.SphereGeometry(0.12, 12, 8);
+        const wingMaterial = new THREE.MeshPhongMaterial({ color: 0x1E90FF });
+        const leftWing = new THREE.Mesh(wingGeometry, wingMaterial);
+        const rightWing = new THREE.Mesh(wingGeometry, wingMaterial);
+        leftWing.scale.set(0.3, 1, 1.2);
+        rightWing.scale.set(0.3, 1, 1.2);
+        leftWing.position.set(0, 0.4, -0.2);
+        rightWing.position.set(0, 0.4, 0.2);
+        group.add(leftWing);
+        group.add(rightWing);
+        
+        // Legs
+        const legGeometry = new THREE.CylinderGeometry(0.015, 0.015, 0.15, 8);
+        const legMaterial = new THREE.MeshPhongMaterial({ color: 0xFF8C00 });
+        const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+        const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
+        leftLeg.position.set(0, 0.175, -0.06);
+        rightLeg.position.set(0, 0.175, 0.06);
+        group.add(leftLeg);
+        group.add(rightLeg);
+        
+        return group;
+    }
+
+    generateGenericAnimal() {
+        // Four-legged generic animal
+        const group = new THREE.Group();
+        
+        // Body
+        const bodyGeometry = new THREE.SphereGeometry(0.25, 12, 8);
+        const bodyMaterial = new THREE.MeshPhongMaterial({ color: 0x8B7355 });
+        const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+        body.scale.set(1.3, 0.7, 0.8);
+        body.position.y = 0.4;
+        group.add(body);
+        
+        // Head
+        const headGeometry = new THREE.SphereGeometry(0.15, 12, 8);
+        const head = new THREE.Mesh(headGeometry, bodyMaterial);
+        head.position.set(0.3, 0.5, 0);
+        group.add(head);
+        
+        // Legs
+        const legGeometry = new THREE.CylinderGeometry(0.05, 0.05, 0.3, 8);
+        const legPositions = [[-0.15, 0.15, -0.15], [0.15, 0.15, -0.15], [-0.15, 0.15, 0.15], [0.15, 0.15, 0.15]];
+        
+        legPositions.forEach(pos => {
+            const leg = new THREE.Mesh(legGeometry, bodyMaterial);
+            leg.position.set(...pos);
+            group.add(leg);
+        });
+        
+        return group;
+    }
+
+    generateCrystal() {
+        const group = new THREE.Group();
+        
+        // Create multiple crystal shards
+        for (let i = 0; i < 5; i++) {
+            const height = 0.4 + Math.random() * 0.8;
+            const radius = 0.08 + Math.random() * 0.15;
+            const segments = 6 + Math.floor(Math.random() * 6);
+            
+            const crystalGeometry = new THREE.ConeGeometry(radius, height, segments);
+            const crystalMaterial = new THREE.MeshPhongMaterial({
+                color: new THREE.Color().setHSL(0.5 + Math.random() * 0.4, 0.8, 0.6),
+                transparent: true,
+                opacity: 0.8,
+                shininess: 100
+            });
+            
+            const crystal = new THREE.Mesh(crystalGeometry, crystalMaterial);
+            crystal.position.set(
+                (Math.random() - 0.5) * 1.2,
+                height / 2,
+                (Math.random() - 0.5) * 1.2
+            );
+            crystal.rotation.y = Math.random() * Math.PI * 2;
+            crystal.rotation.z = (Math.random() - 0.5) * 0.3;
+            
+            group.add(crystal);
+        }
+        
+        return group;
+    }
+
+    generateSpiral() {
+        const group = new THREE.Group();
+        
+        const spiralPoints = [];
+        for (let i = 0; i <= 80; i++) {
+            const t = i / 80;
+            const angle = t * Math.PI * 5;
+            const radius = 0.4 * (1 - t);
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+            const y = t * 1.5;
+            spiralPoints.push(new THREE.Vector3(x, y, z));
+        }
+        
+        const curve = new THREE.CatmullRomCurve3(spiralPoints);
+        const tubeGeometry = new THREE.TubeGeometry(curve, 80, 0.04, 8, false);
+        const tubeMaterial = new THREE.MeshPhongMaterial({ 
+            color: 0x6666FF,
+            shininess: 50
+        });
+        const spiral = new THREE.Mesh(tubeGeometry, tubeMaterial);
+        group.add(spiral);
+        
+        return group;
     }
 
     generateTree() {

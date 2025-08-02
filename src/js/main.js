@@ -877,26 +877,67 @@ class ThreeJSApp {
         this.generateButton.disabled = true;
 
         try {
-            // Use user's token for generation
-            const originalToken = window.huggingFaceService?.token;
-            if (window.huggingFaceService) {
-                window.huggingFaceService.token = userToken;
+            console.log('🤗 Starting AI generation with user token for:', prompt);
+            
+            // Try different AI approaches
+            let model = null;
+            
+            // 1. Try HuggingFace service if available
+            if (window.HuggingFaceService) {
+                try {
+                    console.log('🔄 Attempting HuggingFace generation...');
+                    const hfService = new HuggingFaceService(userToken);
+                    model = await hfService.generate3DModel(prompt, { 
+                        model: 'shap_e',
+                        guidanceScale: 15.0,
+                        steps: 50 
+                    });
+                    if (model) {
+                        console.log('✅ HuggingFace generation successful!');
+                    }
+                } catch (error) {
+                    console.warn('HuggingFace service failed:', error);
+                    model = null;
+                }
             }
-
-            if (this.aiGenerator && this.aiGenerator.generateGeometry) {
-                await this.aiGenerator.generateGeometry(prompt);
-                this.showNotification('AI generation completed with your token!', 'success');
+            
+            // 2. Try AIModelGenerator with Shap-E
+            if (!model && this.aiGenerator) {
+                try {
+                    console.log('🔄 Attempting Shap-E generation...');
+                    model = await this.aiGenerator.generateWithShapE(prompt, { 
+                        apiKey: userToken,
+                        guidanceScale: 15.0,
+                        steps: 50 
+                    });
+                    if (model) {
+                        console.log('✅ Shap-E generation successful!');
+                    }
+                } catch (error) {
+                    console.warn('Shap-E generation failed:', error);
+                    model = null;
+                }
+            }
+            
+            // 3. Fallback to enhanced procedural
+            if (!model) {
+                console.log('🎨 Falling back to AI-enhanced procedural generation...');
+                model = await this.aiGenerator.generateAIStyledProceduralModel(prompt);
+            }
+            
+            // Add the model to the scene
+            if (model) {
+                this.clearScene();
+                this.scene.add(model);
+                console.log('✅ Model added to scene successfully');
+                this.showNotification('✨ AI generation completed!', 'success');
             } else {
-                throw new Error('AI generator not available');
+                throw new Error('Failed to generate any model');
             }
-
-            // Restore original token
-            if (window.huggingFaceService && originalToken) {
-                window.huggingFaceService.token = originalToken;
-            }
+            
         } catch (error) {
-            console.error('User token generation failed:', error);
-            this.showNotification('AI generation failed, falling back to procedural', 'warning');
+            console.error('AI generation failed completely:', error);
+            this.showNotification('AI generation failed, trying enhanced procedural...', 'warning');
             await this.generateProcedural(prompt);
         } finally {
             this.showLoading(false);
@@ -909,12 +950,49 @@ class ThreeJSApp {
         this.generateButton.disabled = true;
 
         try {
-            // Use procedural generation
-            await this.generateGeometryDirect(prompt);
-            this.showNotification('Procedural generation completed!', 'success');
+            console.log('🎨 Starting enhanced procedural generation for:', prompt);
+            
+            // Clear existing objects
+            this.clearScene();
+            this.emptyState.style.display = 'none';
+
+            // Use enhanced procedural generation
+            let model = null;
+            
+            if (this.aiGenerator) {
+                model = await this.aiGenerator.generateAIStyledProceduralModel(prompt);
+            }
+            
+            if (!model) {
+                // Fallback to basic procedural
+                model = await this.aiGenerator.generateProceduralModel(prompt);
+            }
+            
+            if (model) {
+                // Position the model
+                model.position.set(0, 0, 0);
+                model.castShadow = true;
+                model.receiveShadow = true;
+                
+                this.scene.add(model);
+                this.objects.push(model);
+                
+                // Focus camera on the new model
+                this.focusCameraOnScene();
+                
+                // Add to history
+                this.addToHistory(prompt);
+                
+                console.log('✅ Enhanced procedural generation completed');
+                this.showNotification('🎨 Enhanced procedural generation completed!', 'success');
+            } else {
+                throw new Error('Failed to generate procedural model');
+            }
+            
         } catch (error) {
             console.error('Procedural generation failed:', error);
             this.showNotification('Generation failed', 'error');
+            this.emptyState.style.display = 'flex';
         } finally {
             this.showLoading(false);
             this.generateButton.disabled = false;
