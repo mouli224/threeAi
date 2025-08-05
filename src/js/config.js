@@ -22,7 +22,7 @@ const HUGGINGFACE_CONFIG = {
     limits: {
         // Anonymous users (not logged in)
         anonymous: {
-            procedural: 5  // 5 procedural generations, AI requires user token
+            procedural: 999  // Unlimited procedural generations, AI requires user token
         },
         // Registered users (logged in)  
         registered: {

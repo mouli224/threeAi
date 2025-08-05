@@ -1618,6 +1618,242 @@ body {
     backdrop-filter: blur(4px);
 }
 
+/* General Button Styles */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    min-height: 40px;
+    gap: 8px;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn.btn-primary:hover:not(:disabled) {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.btn.btn-secondary {
+    background: var(--gray-200);
+    color: var(--gray-800);
+    border: 1px solid var(--gray-300);
+}
+
+.btn.btn-secondary:hover:not(:disabled) {
+    background: var(--gray-300);
+}
+
+.btn.btn-danger, .btn.danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn.btn-danger:hover:not(:disabled), .btn.danger:hover:not(:disabled) {
+    background: #c82333;
+}
+
+/* Modal Footer */
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 20px 24px;
+    background: var(--gray-50);
+    border-top: 1px solid var(--gray-200);
+    border-radius: 0 0 12px 12px;
+}
+
+/* Profile and Settings Styles */
+.profile-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.profile-avatar {
+    width: 64px;
+    height: 64px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.profile-details h3 {
+    margin: 0 0 4px 0;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.profile-email {
+    margin: 0 0 4px 0;
+    color: var(--gray-600);
+    font-size: 14px;
+}
+
+.profile-joined {
+    margin: 0;
+    color: var(--gray-500);
+    font-size: 12px;
+}
+
+.usage-summary {
+    margin-top: 24px;
+}
+
+.usage-summary h4 {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.usage-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: var(--gray-50);
+    border-radius: 6px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: var(--gray-600);
+}
+
+.stat-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.settings-section {
+    margin-bottom: 24px;
+}
+
+.settings-section h4 {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.token-section {
+    padding: 16px;
+    background: var(--gray-50);
+    border-radius: 6px;
+    margin-bottom: 16px;
+}
+
+.token-status {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.preference-item {
+    padding: 12px;
+    background: var(--gray-50);
+    border-radius: 6px;
+}
+
+.preference-item label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* Feedback Form Styles */
+.feedback-form {
+    max-width: 600px;
+}
+
+.feedback-form .form-group {
+    margin-bottom: 16px;
+}
+
+.feedback-form .form-group label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.feedback-form input,
+.feedback-form select,
+.feedback-form textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--gray-300);
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.2s ease;
+}
+
+.feedback-form input:focus,
+.feedback-form select:focus,
+.feedback-form textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.feedback-form textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.feedback-form .form-help {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--gray-500);
+}
+
+.social-link {
+    display: inline-block;
+    padding: 8px 16px;
+    background: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.social-link:hover {
+    background: var(--primary-dark);
+    text-decoration: none;
+}
+
 .modal.active {
     display: flex !important;
 }

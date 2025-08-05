@@ -130,6 +130,11 @@ class HFTokenManager {
         document.body.appendChild(modal);
         document.getElementById('hf-token-input').focus();
     }
+    
+    // Alias for showTokenDialog for consistency
+    showTokenModal() {
+        this.showTokenDialog();
+    }
 
     /**
      * Save token from dialog

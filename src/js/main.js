@@ -74,6 +74,14 @@ class ThreeJSApp {
         } else {
             console.log('ℹ️ AI Model Generator not available - using procedural generation only');
         }
+        
+        // Initialize background library
+        if (typeof BackgroundLibrary !== 'undefined') {
+            this.backgroundLibrary = new BackgroundLibrary(this.scene, this.renderer);
+            console.log('✅ Background Library initialized');
+        } else {
+            console.warn('⚠️ Background Library not available');
+        }
     }
 
     initializeAuth() {
@@ -334,6 +342,8 @@ class ThreeJSApp {
         this.loginBtn = document.getElementById('login-btn');
         this.signupBtn = document.getElementById('signup-btn');
         this.logoutLink = document.getElementById('logout-link');
+        this.profileLink = document.getElementById('profile-link');
+        this.settingsLink = document.getElementById('settings-link');
         this.userMenuBtn = document.getElementById('user-menu-btn');
         this.userDropdown = document.getElementById('user-dropdown');
         
@@ -761,18 +771,101 @@ class ThreeJSApp {
                     <div class="contact-section">
                         <h4>🌐 Follow Us</h4>
                         <div class="social-links">
-                            <a href="https://www.github.com/mouli224/" class="social-link">GitHub</a>
+                            <a href="https://www.github.com/mouli224/" class="social-link" target="_blank">GitHub</a>
                         </div>
                     </div>
                     
                     <div class="contact-section">
                         <h4>💡 Feedback</h4>
                         <p>Have ideas for new features? Found a bug? We'd love to hear from you!</p>
-                        <button class="feedback-btn">Send Feedback</button>
+                        <button class="btn btn-primary feedback-btn" onclick="app.showFeedbackForm()">Send Feedback</button>
                     </div>
                 </div>
             </div>
         `;
+    }
+    
+    showFeedbackForm() {
+        this.createModal('Send Feedback', `
+            <form id="feedback-form" class="feedback-form">
+                <div class="form-group">
+                    <label for="feedback-name">Name (Optional):</label>
+                    <input type="text" id="feedback-name" placeholder="Your name" value="${this.currentUser?.name || ''}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="feedback-email">Email (Optional):</label>
+                    <input type="email" id="feedback-email" placeholder="your.email@example.com" value="${this.currentUser?.email || ''}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="feedback-type">Feedback Type:</label>
+                    <select id="feedback-type" required>
+                        <option value="">Select type...</option>
+                        <option value="bug">🐛 Bug Report</option>
+                        <option value="feature">💡 Feature Request</option>
+                        <option value="improvement">⚡ Improvement Suggestion</option>
+                        <option value="general">💬 General Feedback</option>
+                        <option value="support">🆘 Support Request</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="feedback-message">Message: *</label>
+                    <textarea id="feedback-message" rows="6" placeholder="Please describe your feedback, bug report, or feature request in detail..." required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <small class="form-help">Your feedback helps us improve ThreeAI. We read every message!</small>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" onclick="document.querySelector('.modal').remove()" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Feedback</button>
+                </div>
+            </form>
+        `);
+        
+        // Add form submit handler
+        document.getElementById('feedback-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.submitFeedback();
+        });
+    }
+    
+    submitFeedback() {
+        const name = document.getElementById('feedback-name').value.trim();
+        const email = document.getElementById('feedback-email').value.trim();
+        const type = document.getElementById('feedback-type').value;
+        const message = document.getElementById('feedback-message').value.trim();
+        
+        if (!type || !message) {
+            this.showNotification('Please fill in all required fields', 'error');
+            return;
+        }
+        
+        // Create mailto link with feedback content
+        const subject = encodeURIComponent(`ThreeAI Feedback: ${type.charAt(0).toUpperCase() + type.slice(1)}`);
+        const body = encodeURIComponent(`
+Feedback Type: ${type.charAt(0).toUpperCase() + type.slice(1)}
+Name: ${name || 'Anonymous'}
+Email: ${email || 'Not provided'}
+
+Message:
+${message}
+
+---
+Sent from ThreeAI Web App
+        `.trim());
+        
+        const mailtoLink = `mailto:threeaiproject@gmail.com?subject=${subject}&body=${body}`;
+        
+        // Open email client
+        window.open(mailtoLink, '_blank');
+        
+        // Close modal and show success message
+        document.querySelector('.modal').remove();
+        this.showNotification('Email client opened! Please send the email to complete your feedback submission.', 'success');
     }
 
     hideModalSections() {
@@ -1016,6 +1109,11 @@ class ThreeJSApp {
 
             this.showNotification('🤖 Generating with AI...', 'info');
             
+            // Set background based on prompt
+            if (this.backgroundLibrary) {
+                this.backgroundLibrary.setBackgroundFromPrompt(prompt);
+            }
+            
             // Execute generation through usage manager
             const aiModel = await this.usageManager.executeGeneration(prompt);
             
@@ -1120,6 +1218,11 @@ class ThreeJSApp {
 
     async parseAndCreateGeometryProcedural(prompt) {
         console.log('🎨 Using enhanced procedural generation for:', prompt);
+        
+        // Set background based on prompt
+        if (this.backgroundLibrary) {
+            this.backgroundLibrary.setBackgroundFromPrompt(prompt);
+        }
         
         try {
             // Use the enhanced procedural generation from AIModelGenerator
@@ -1654,6 +1757,22 @@ class ThreeJSApp {
             });
         }
         
+        // Profile link
+        if (this.profileLink) {
+            this.profileLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showProfileModal();
+            });
+        }
+        
+        // Settings link
+        if (this.settingsLink) {
+            this.settingsLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showSettingsModal();
+            });
+        }
+        
         // User menu toggle
         if (this.userMenuBtn) {
             this.userMenuBtn.addEventListener('click', () => {
@@ -1709,6 +1828,78 @@ class ThreeJSApp {
             this.showNotification('Logged out successfully', 'success');
         } else {
             this.showNotification('Auth system not available', 'error');
+        }
+    }
+    
+    showProfileModal() {
+        if (!this.currentUser) {
+            this.showNotification('Please log in to view profile', 'warning');
+            return;
+        }
+        
+        this.createModal('Profile', `
+            <div class="profile-info">
+                <div class="profile-avatar">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                </div>
+                <div class="profile-details">
+                    <h3>${this.currentUser.name || 'User'}</h3>
+                    <p class="profile-email">${this.currentUser.email || 'No email available'}</p>
+                    <p class="profile-joined">Joined: ${this.currentUser.created_at ? new Date(this.currentUser.created_at).toLocaleDateString() : 'Unknown'}</p>
+                </div>
+            </div>
+            <div class="usage-summary">
+                <h4>Usage Statistics</h4>
+                <div class="usage-stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">Procedural Models:</span>
+                        <span class="stat-value">${this.usageManager?.getProceduralUsage() || 0}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">AI Models:</span>
+                        <span class="stat-value">${this.usageManager?.getHFUsage() || 0}</span>
+                    </div>
+                </div>
+            </div>
+        `);
+    }
+    
+    showSettingsModal() {
+        const hasToken = hfTokenManager?.hasToken || false;
+        const tokenStatus = hasToken ? '✅ Token configured' : '❌ No token';
+        
+        this.createModal('Settings', `
+            <div class="settings-section">
+                <h4>AI Token Management</h4>
+                <div class="token-section">
+                    <p class="token-status">Status: ${tokenStatus}</p>
+                    ${hasToken ? `
+                        <button class="btn secondary" onclick="hfTokenManager.showTokenModal()">Update Token</button>
+                        <button class="btn danger" onclick="app.removeHFToken()">Remove Token</button>
+                    ` : `
+                        <button class="btn primary" onclick="hfTokenManager.showTokenModal()">Add HF Token</button>
+                    `}
+                </div>
+            </div>
+            <div class="settings-section">
+                <h4>Preferences</h4>
+                <div class="preference-item">
+                    <label>
+                        <input type="checkbox" ${this.aiEnabled ? 'checked' : ''}> 
+                        Enable AI Generation by Default
+                    </label>
+                </div>
+            </div>
+        `);
+    }
+    
+    removeHFToken() {
+        if (hfTokenManager) {
+            hfTokenManager.removeToken();
+            this.showNotification('HF Token removed successfully', 'success');
+            this.showSettingsModal(); // Refresh the modal
         }
     }
     
